@@ -1,6 +1,10 @@
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Stats } from '@react-three/drei';
 import { PointCloud } from './PointCloud';
+import { PointLabel } from './PointLabel';
+import { ClusterLabels } from './ClusterLabels';
+import { CameraAnimator } from './CameraAnimator';
+import { ScrollZoom } from './ScrollZoom';
 import { useSpaceStore } from '../store/useSpaceStore';
 
 const FOG_COLOR = '#0a0a0a';
@@ -24,12 +28,20 @@ export function SpaceCanvas() {
         <directionalLight position={[50, 50, 50]} intensity={0.6} />
         <directionalLight position={[-50, -30, -50]} intensity={0.3} />
         <PointCloud />
+        <PointLabel />
+        <ClusterLabels />
+        <CameraAnimator />
         <OrbitControls
+          makeDefault
           enableDamping
           dampingFactor={0.05}
-          minDistance={5}
-          maxDistance={300}
+          rotateSpeed={0.6}
+          panSpeed={0.7}
+          minDistance={0}
+          maxDistance={500}
+          enableZoom={false}
         />
+        <ScrollZoom />
         <Stats />
       </Canvas>
     </div>
