@@ -1,0 +1,1019 @@
+# Curated concept list for Noosphere
+# Domain-specific terms that make the embedding space interesting to explore.
+# These supplement the Google 20K frequency list with concepts that reveal
+# semantic structure, bias patterns, and model representations.
+
+# === Science & Technology ===
+photosynthesis
+quantum mechanics
+relativity
+evolution
+natural selection
+dna
+genome
+mitosis
+neuroscience
+thermodynamics
+entropy
+electromagnetism
+gravity
+black hole
+supernova
+dark matter
+dark energy
+big bang
+string theory
+artificial intelligence
+machine learning
+deep learning
+neural network
+algorithm
+recursion
+encryption
+blockchain
+quantum computing
+nanotechnology
+biotechnology
+gene therapy
+stem cell
+nuclear fusion
+nuclear fission
+superconductor
+semiconductor
+transistor
+microprocessor
+operating system
+compiler
+database
+internet protocol
+cybersecurity
+robotics
+automation
+computer vision
+natural language processing
+reinforcement learning
+gradient descent
+backpropagation
+overfitting
+dimensionality reduction
+clustering
+classification
+regression
+statistical significance
+standard deviation
+normal distribution
+correlation
+causation
+hypothesis testing
+bayesian inference
+information theory
+signal processing
+fourier transform
+differential equation
+linear algebra
+topology
+graph theory
+number theory
+prime number
+infinity
+chaos theory
+fractal
+emergence
+complexity theory
+cellular automaton
+
+# === Philosophy & Abstract Concepts ===
+consciousness
+free will
+determinism
+existentialism
+nihilism
+stoicism
+utilitarianism
+deontology
+epistemology
+ontology
+metaphysics
+phenomenology
+empiricism
+rationalism
+pragmatism
+relativism
+absolutism
+dualism
+monism
+materialism
+idealism
+reductionism
+holism
+truth
+knowledge
+belief
+justification
+perception
+reality
+illusion
+identity
+self
+meaning
+purpose
+existence
+essence
+being
+nothingness
+absurdity
+authenticity
+transcendence
+immanence
+dialectic
+paradox
+tautology
+axiom
+theorem
+proof
+logic
+reason
+intuition
+wisdom
+virtue
+ethics
+morality
+justice
+fairness
+equality
+equity
+liberty
+freedom
+autonomy
+sovereignty
+rights
+duties
+obligations
+responsibility
+accountability
+consent
+social contract
+natural law
+utopia
+dystopia
+
+# === Emotions & Psychology ===
+happiness
+sadness
+anger
+fear
+disgust
+surprise
+contempt
+love
+hate
+jealousy
+envy
+gratitude
+pride
+shame
+guilt
+embarrassment
+anxiety
+depression
+euphoria
+melancholy
+nostalgia
+hope
+despair
+courage
+cowardice
+compassion
+empathy
+sympathy
+apathy
+curiosity
+boredom
+awe
+wonder
+serenity
+tranquility
+frustration
+resentment
+loneliness
+belonging
+attachment
+abandonment
+trauma
+resilience
+vulnerability
+confidence
+insecurity
+self-esteem
+narcissism
+altruism
+ego
+id
+superego
+unconscious
+subconscious
+cognition
+memory
+attention
+perception
+imagination
+creativity
+intelligence
+emotional intelligence
+mindfulness
+meditation
+therapy
+psychoanalysis
+cognitive behavioral therapy
+neuroplasticity
+habit
+addiction
+motivation
+intrinsic motivation
+flow state
+peak experience
+
+# === Professions & Occupations ===
+doctor
+nurse
+surgeon
+psychiatrist
+therapist
+dentist
+pharmacist
+paramedic
+midwife
+engineer
+software engineer
+mechanical engineer
+civil engineer
+electrical engineer
+architect
+scientist
+physicist
+chemist
+biologist
+mathematician
+statistician
+data scientist
+researcher
+professor
+teacher
+lecturer
+tutor
+principal
+librarian
+lawyer
+judge
+attorney
+paralegal
+prosecutor
+detective
+police officer
+firefighter
+soldier
+pilot
+astronaut
+sailor
+diplomat
+politician
+senator
+president
+prime minister
+ambassador
+journalist
+reporter
+editor
+author
+novelist
+poet
+playwright
+screenwriter
+filmmaker
+director
+actor
+musician
+composer
+conductor
+painter
+sculptor
+photographer
+designer
+graphic designer
+fashion designer
+interior designer
+chef
+baker
+farmer
+gardener
+carpenter
+electrician
+plumber
+mechanic
+welder
+truck driver
+bus driver
+taxi driver
+flight attendant
+receptionist
+secretary
+accountant
+auditor
+banker
+financial analyst
+economist
+actuary
+real estate agent
+salesperson
+marketer
+advertiser
+public relations
+entrepreneur
+ceo
+cfo
+manager
+consultant
+social worker
+psychologist
+counselor
+clergy
+priest
+rabbi
+imam
+monk
+nun
+janitor
+housekeeper
+nanny
+babysitter
+barista
+waiter
+bartender
+cashier
+retail worker
+warehouse worker
+factory worker
+construction worker
+miner
+lumberjack
+fisherman
+veterinarian
+zookeeper
+marine biologist
+archaeologist
+anthropologist
+sociologist
+historian
+philosopher
+theologian
+linguist
+translator
+interpreter
+
+# === Identity & Demographics ===
+man
+woman
+boy
+girl
+child
+teenager
+adult
+elder
+mother
+father
+parent
+son
+daughter
+sibling
+brother
+sister
+husband
+wife
+spouse
+partner
+family
+marriage
+divorce
+widow
+orphan
+immigrant
+refugee
+citizen
+foreigner
+native
+indigenous
+minority
+majority
+wealthy
+poor
+middle class
+working class
+upper class
+homeless
+disabled
+able-bodied
+young
+old
+infant
+toddler
+adolescent
+senior
+retired
+employed
+unemployed
+educated
+uneducated
+literate
+illiterate
+urban
+rural
+suburban
+
+# === Culture, Arts & Music ===
+renaissance
+baroque
+classical
+romantic
+modernism
+postmodernism
+impressionism
+expressionism
+surrealism
+cubism
+abstract art
+realism
+naturalism
+minimalism
+pop art
+gothic
+art deco
+art nouveau
+avant-garde
+literature
+poetry
+prose
+fiction
+nonfiction
+novel
+short story
+essay
+memoir
+biography
+autobiography
+tragedy
+comedy
+satire
+allegory
+metaphor
+symbolism
+jazz
+blues
+rock
+hip hop
+classical music
+opera
+symphony
+concerto
+sonata
+folk music
+country music
+electronic music
+reggae
+punk
+metal
+gospel
+rhythm
+melody
+harmony
+tempo
+orchestra
+choir
+ballet
+contemporary dance
+theater
+musical
+cinema
+documentary
+animation
+sculpture
+pottery
+ceramics
+calligraphy
+graffiti
+street art
+photography
+architecture
+landscape
+portrait
+still life
+mural
+mosaic
+tapestry
+origami
+
+# === Nature & Geography ===
+ocean
+mountain
+river
+lake
+desert
+forest
+rainforest
+tundra
+savanna
+prairie
+wetland
+marsh
+swamp
+glacier
+volcano
+earthquake
+tsunami
+hurricane
+tornado
+monsoon
+drought
+flood
+coral reef
+archipelago
+peninsula
+plateau
+canyon
+valley
+delta
+estuary
+continent
+island
+coastline
+cliff
+cave
+waterfall
+geyser
+hot spring
+aurora borealis
+ecosystem
+biodiversity
+habitat
+species
+extinction
+endangered
+conservation
+deforestation
+climate change
+global warming
+greenhouse effect
+carbon dioxide
+ozone layer
+pollution
+renewable energy
+solar energy
+wind energy
+hydroelectric
+geothermal
+sustainability
+recycling
+composting
+
+# === Politics & Society ===
+democracy
+republic
+monarchy
+autocracy
+dictatorship
+oligarchy
+theocracy
+communism
+socialism
+capitalism
+libertarianism
+conservatism
+liberalism
+progressivism
+nationalism
+globalism
+populism
+fascism
+anarchism
+colonialism
+imperialism
+revolution
+reform
+protest
+activism
+civil rights
+human rights
+suffrage
+emancipation
+segregation
+integration
+discrimination
+prejudice
+racism
+sexism
+homophobia
+xenophobia
+antisemitism
+islamophobia
+tolerance
+diversity
+inclusion
+affirmative action
+reparations
+gentrification
+immigration
+asylum
+deportation
+border
+citizenship
+patriotism
+propaganda
+censorship
+surveillance
+privacy
+transparency
+corruption
+bureaucracy
+regulation
+deregulation
+taxation
+welfare
+universal basic income
+healthcare
+education reform
+gun control
+abortion
+death penalty
+war
+peace
+terrorism
+diplomacy
+sanctions
+treaty
+alliance
+united nations
+
+# === Medicine & Health ===
+disease
+infection
+virus
+bacteria
+pandemic
+epidemic
+vaccination
+immunity
+antibiotic
+chemotherapy
+radiation
+surgery
+diagnosis
+prognosis
+symptom
+chronic
+acute
+cancer
+diabetes
+heart disease
+stroke
+alzheimer
+dementia
+asthma
+allergy
+autoimmune
+inflammation
+fever
+pain
+healing
+recovery
+rehabilitation
+prosthetic
+transplant
+blood pressure
+cholesterol
+insulin
+hormone
+vitamin
+nutrition
+diet
+exercise
+obesity
+anorexia
+bulimia
+mental health
+schizophrenia
+bipolar disorder
+autism
+adhd
+dyslexia
+insomnia
+sleep
+circadian rhythm
+immune system
+nervous system
+cardiovascular
+respiratory
+digestive
+skeletal
+muscular
+
+# === Food & Cuisine ===
+bread
+rice
+pasta
+sushi
+pizza
+hamburger
+steak
+chicken
+fish
+salad
+soup
+curry
+chocolate
+coffee
+tea
+wine
+beer
+whiskey
+cheese
+butter
+sugar
+salt
+pepper
+olive oil
+garlic
+onion
+tomato
+potato
+avocado
+banana
+apple
+orange
+strawberry
+mango
+coconut
+vanilla
+cinnamon
+ginger
+wasabi
+soy sauce
+fermentation
+baking
+grilling
+roasting
+vegetarian
+vegan
+organic
+gourmet
+street food
+comfort food
+fast food
+fine dining
+
+# === Religion & Spirituality ===
+god
+prayer
+meditation
+worship
+faith
+doubt
+salvation
+sin
+redemption
+karma
+reincarnation
+enlightenment
+nirvana
+heaven
+hell
+purgatory
+soul
+spirit
+angel
+demon
+miracle
+prophecy
+revelation
+scripture
+bible
+quran
+torah
+dharma
+yoga
+pilgrimage
+ritual
+ceremony
+sacrament
+baptism
+communion
+confession
+fasting
+monastery
+temple
+mosque
+church
+synagogue
+shrine
+cathedral
+sacred
+profane
+holy
+divine
+secular
+agnostic
+atheist
+polytheism
+monotheism
+pantheism
+mysticism
+shamanism
+animism
+ancestor worship
+
+# === Economics & Finance ===
+inflation
+deflation
+recession
+depression
+boom
+bubble
+crash
+stock market
+bond
+commodity
+currency
+exchange rate
+interest rate
+central bank
+federal reserve
+monetary policy
+fiscal policy
+gdp
+trade deficit
+trade surplus
+tariff
+subsidy
+monopoly
+oligopoly
+competition
+supply
+demand
+equilibrium
+scarcity
+abundance
+wage
+salary
+minimum wage
+profit
+loss
+revenue
+debt
+credit
+mortgage
+loan
+investment
+dividend
+portfolio
+hedge fund
+venture capital
+cryptocurrency
+bitcoin
+fintech
+microfinance
+poverty line
+inequality
+gini coefficient
+
+# === Historical Concepts ===
+civilization
+empire
+dynasty
+revolution
+renaissance
+enlightenment
+industrial revolution
+world war
+cold war
+colonization
+independence
+abolition
+civil war
+genocide
+holocaust
+slavery
+feudalism
+crusades
+silk road
+manifest destiny
+apartheid
+iron curtain
+space race
+nuclear age
+information age
+digital revolution
+printing press
+steam engine
+assembly line
+atomic bomb
+moon landing
+internet
+social media
+globalization
+
+# === Sports & Games ===
+football
+basketball
+baseball
+soccer
+tennis
+golf
+swimming
+running
+marathon
+boxing
+wrestling
+gymnastics
+skiing
+surfing
+cycling
+volleyball
+cricket
+rugby
+hockey
+chess
+poker
+video game
+esports
+olympics
+championship
+tournament
+referee
+coach
+athlete
+sportsmanship
+competition
+teamwork
+strategy
+endurance
+agility
+strength
+flexibility
+
+# === Bias-Revealing Pairs (intentionally included to make bias probes interesting) ===
+masculine
+feminine
+aggressive
+nurturing
+rational
+emotional
+strong
+weak
+leader
+follower
+ambitious
+humble
+assertive
+submissive
+competitive
+cooperative
+independent
+dependent
+logical
+intuitive
+objective
+subjective
+dominant
+passive
+provider
+caregiver
+breadwinner
+homemaker
+genius
+average
+prodigy
+ordinary
+beautiful
+ugly
+thin
+fat
+young
+elderly
+wealthy
+impoverished
+educated
+ignorant
+civilized
+primitive
+modern
+traditional
+western
+eastern
+developed
+undeveloped
+urban
+rural
+native
+foreign
+legal
+illegal
+citizen
+alien

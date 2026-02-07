@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+.venv/
+*.npy
+
+# Pipeline cache
+pipeline/data/cache/
+
+# Node
+node_modules/
+web/dist/
+
+# Generated spaces (large files, regenerated via pipeline)
+web/public/spaces/*.json
+web/public/spaces/*.json.gz
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment
+.env
+.env.local
