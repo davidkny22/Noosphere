@@ -3,6 +3,7 @@ import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 
 const ZOOM_SPEED = 5.0;
+const MAX_DISTANCE = 300;
 
 /**
  * Custom scroll zoom that moves the camera AND orbit target forward/backward
@@ -22,6 +23,10 @@ export function ScrollZoom() {
       // Scroll down (positive deltaY) = zoom in = move forward
       const delta = -e.deltaY * 0.01 * ZOOM_SPEED;
       const move = direction.multiplyScalar(delta);
+
+      // Block zoom-out if camera would exceed max distance from origin
+      const newPos = camera.position.clone().add(move);
+      if (delta < 0 && newPos.length() > MAX_DISTANCE) return;
 
       camera.position.add(move);
 

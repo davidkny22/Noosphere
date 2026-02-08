@@ -6,6 +6,7 @@ import { easeOutCubic, clamp } from '../utils/math';
 
 const OFFSET_DISTANCE = 15;
 const SETTLE_FRAMES = 10;
+const AUTO_ROTATE_SPEED = 1.0;
 
 interface AnimationState {
   startPos: THREE.Vector3;
@@ -18,14 +19,44 @@ interface AnimationState {
 }
 
 export function CameraAnimator() {
-  const { camera } = useThree();
+  const { camera, controls, gl } = useThree();
   const animRef = useRef<AnimationState | null>(null);
   const interruptedRef = useRef(false);
+  const autoOrbitRef = useRef(true);
 
   const flyToTarget = useSpaceStore((s) => s.flyToTarget);
   const flyToState = useSpaceStore((s) => s.flyToState);
+  const space = useSpaceStore((s) => s.space);
 
-  // Detect user interruption via pointer events on the canvas
+  // Enable auto-orbit when a new space loads
+  useEffect(() => {
+    if (!space || !controls) return;
+    const orbitControls = controls as unknown as { autoRotate: boolean; autoRotateSpeed: number };
+    autoOrbitRef.current = true;
+    orbitControls.autoRotate = true;
+    orbitControls.autoRotateSpeed = AUTO_ROTATE_SPEED;
+  }, [space, controls]);
+
+  // Stop auto-orbit on first user interaction
+  useEffect(() => {
+    const canvas = gl.domElement;
+
+    const stopAutoOrbit = () => {
+      if (!autoOrbitRef.current || !controls) return;
+      autoOrbitRef.current = false;
+      const orbitControls = controls as unknown as { autoRotate: boolean };
+      orbitControls.autoRotate = false;
+    };
+
+    canvas.addEventListener('pointerdown', stopAutoOrbit);
+    canvas.addEventListener('wheel', stopAutoOrbit);
+    return () => {
+      canvas.removeEventListener('pointerdown', stopAutoOrbit);
+      canvas.removeEventListener('wheel', stopAutoOrbit);
+    };
+  }, [gl, controls]);
+
+  // Detect user interruption during fly-to animation
   useEffect(() => {
     const handlePointerDown = () => {
       if (flyToState === 'animating') {
@@ -46,14 +77,20 @@ export function CameraAnimator() {
     };
   }, [flyToState]);
 
-  // Start animation when flyToTarget changes
+  // Start fly-to animation — also stops auto-orbit
   useEffect(() => {
     if (!flyToTarget || flyToState !== 'animating') return;
+
+    // Stop auto-orbit when flying to a point
+    if (autoOrbitRef.current && controls) {
+      autoOrbitRef.current = false;
+      const orbitControls = controls as unknown as { autoRotate: boolean };
+      orbitControls.autoRotate = false;
+    }
 
     const destination = new THREE.Vector3(...flyToTarget);
     const currentPos = camera.position.clone();
 
-    // Compute approach direction to maintain viewing angle
     const direction = currentPos.clone().sub(destination).normalize();
     if (direction.length() < 0.001) {
       direction.set(0, 0, 1);
@@ -63,7 +100,6 @@ export function CameraAnimator() {
     const distance = currentPos.distanceTo(endPos);
     const duration = clamp(distance * 0.03, 0.8, 3.0);
 
-    // Get current OrbitControls target (approximate as point camera looks at)
     const currentTarget = new THREE.Vector3();
     camera.getWorldDirection(currentTarget);
     currentTarget.multiplyScalar(OFFSET_DISTANCE).add(currentPos);
@@ -79,7 +115,7 @@ export function CameraAnimator() {
     };
 
     interruptedRef.current = false;
-  }, [flyToTarget, flyToState, camera]);
+  }, [flyToTarget, flyToState, camera, controls]);
 
   useFrame((state, delta) => {
     const anim = animRef.current;
@@ -87,7 +123,6 @@ export function CameraAnimator() {
 
     const currentFlyToState = useSpaceStore.getState().flyToState;
 
-    // Handle interruption
     if (interruptedRef.current) {
       animRef.current = null;
       interruptedRef.current = false;
@@ -100,10 +135,8 @@ export function CameraAnimator() {
       const t = clamp(anim.elapsed / anim.duration, 0, 1);
       const eased = easeOutCubic(t);
 
-      // Lerp camera position
       camera.position.lerpVectors(anim.startPos, anim.endPos, eased);
 
-      // Lerp look-at target
       const lookTarget = new THREE.Vector3().lerpVectors(
         anim.startTarget,
         anim.endTarget,
@@ -111,10 +144,9 @@ export function CameraAnimator() {
       );
       camera.lookAt(lookTarget);
 
-      // Update OrbitControls target if available
-      const controls = state.controls as { target?: THREE.Vector3 } | null;
-      if (controls?.target) {
-        controls.target.copy(lookTarget);
+      const ctrl = state.controls as { target?: THREE.Vector3 } | null;
+      if (ctrl?.target) {
+        ctrl.target.copy(lookTarget);
       }
 
       if (t >= 1) {

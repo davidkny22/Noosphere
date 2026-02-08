@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Stats } from '@react-three/drei';
 import { PointCloud } from './PointCloud';
@@ -9,8 +9,7 @@ import { ScrollZoom } from './ScrollZoom';
 import { useSpaceStore } from '../store/useSpaceStore';
 
 const FOG_COLOR = '#0a0a0a';
-const FOG_NEAR = 60;
-const FOG_FAR = 200;
+const NUM_POINTS_FOG_THRESHOLD = 5000;
 
 export function SpaceCanvas() {
   const space = useSpaceStore((s) => s.space);
@@ -24,6 +23,29 @@ export function SpaceCanvas() {
     return () => window.removeEventListener('keydown', handler);
   }, []);
 
+  // Dynamic fog from point count + coordinate extent
+  // Fog distances are measured from the camera, not the origin.
+  // Camera starts at z=80 and the data is centered at origin with radius ~maxDist.
+  // We scale fog so dense datasets get tighter fog and sparse ones get looser fog.
+  const { fogNear, fogFar } = useMemo(() => {
+    if (!space) return { fogNear: 60, fogFar: 200 };
+
+    const n = space.points.length;
+    let maxDist = 0;
+    for (let i = 0; i < n; i++) {
+      const [x, y, z] = space.points[i]!.pos;
+      const dist = Math.sqrt(x * x + y * y + z * z);
+      if (dist > maxDist) maxDist = dist;
+    }
+
+    // multiplier: 1.0 for dense (>=5K), up to 2.0 for sparse (<5K)
+    const multiplier = 2 - Math.min(n, NUM_POINTS_FOG_THRESHOLD) / NUM_POINTS_FOG_THRESHOLD;
+    return {
+      fogNear: maxDist * 1.5,
+      fogFar: maxDist * 5 * multiplier,
+    };
+  }, [space]);
+
   if (!space) return null;
 
   return (
@@ -33,7 +55,7 @@ export function SpaceCanvas() {
         gl={{ antialias: true }}
         style={{ background: FOG_COLOR }}
       >
-        <fog attach="fog" args={[FOG_COLOR, FOG_NEAR, FOG_FAR]} />
+        <fog attach="fog" args={[FOG_COLOR, fogNear, fogFar]} />
         <ambientLight intensity={0.4} />
         <directionalLight position={[50, 50, 50]} intensity={0.6} />
         <directionalLight position={[-50, -30, -50]} intensity={0.3} />
