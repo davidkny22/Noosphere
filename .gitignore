@@ -16,6 +16,10 @@ web/dist/
 # Generated spaces (large files, regenerated via pipeline)
 web/public/spaces/*.json
 web/public/spaces/*.json.gz
+web/public/spaces/*.faiss
+web/public/spaces/*.pt
+web/public/spaces/*.bin
+web/public/spaces/*-embeddings.json
 
 # OS
 .DS_Store

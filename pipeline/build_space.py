@@ -16,7 +16,10 @@ import click
 
 from src.cluster import cluster_points
 from src.embed import embed_vocabulary
+from src.export_embeddings import export_embeddings
+from src.faiss_index import build_faiss_index
 from src.package import package_space
+from src.parametric import train_parametric
 from src.reduce import reduce_to_3d
 from src.vocab import assemble_vocabulary
 
@@ -100,6 +103,24 @@ PIPELINE_DIR = Path(__file__).parent
     help="Gzip the output JSON.",
 )
 @click.option(
+    "--skip-faiss",
+    is_flag=True,
+    default=False,
+    help="Skip FAISS index building.",
+)
+@click.option(
+    "--skip-parametric",
+    is_flag=True,
+    default=False,
+    help="Skip ParamPaCMAP training.",
+)
+@click.option(
+    "--skip-embeddings-export",
+    is_flag=True,
+    default=False,
+    help="Skip HD embeddings export.",
+)
+@click.option(
     "--cache-dir",
     type=click.Path(),
     default=str(PIPELINE_DIR / "data" / "cache"),
@@ -117,22 +138,30 @@ def main(
     pacmap_fp_ratio: float,
     hdbscan_min_cluster: int,
     compress: bool,
+    skip_faiss: bool,
+    skip_parametric: bool,
+    skip_embeddings_export: bool,
     cache_dir: str,
 ) -> None:
     total_start = time.time()
     data_dir = PIPELINE_DIR / "data"
 
+    total_steps = 5 + (not skip_faiss) + (not skip_parametric) + (not skip_embeddings_export)
+    step = 0
+
     # Step 1: Vocabulary
+    step += 1
     logger.info("=" * 60)
-    logger.info("Step 1/5: Assembling vocabulary (target: %d terms)", vocab_size)
+    logger.info("Step %d/%d: Assembling vocabulary (target: %d terms)", step, total_steps, vocab_size)
     logger.info("=" * 60)
     t0 = time.time()
     vocab = assemble_vocabulary(target_size=vocab_size, data_dir=data_dir)
-    logger.info("Step 1/5 done (%.1fs) — %d terms", time.time() - t0, len(vocab.terms))
+    logger.info("Step %d done (%.1fs) — %d terms", step, time.time() - t0, len(vocab.terms))
 
     # Step 2: Embedding
+    step += 1
     logger.info("=" * 60)
-    logger.info("Step 2/5: Embedding %d terms with %s", len(vocab.terms), model)
+    logger.info("Step %d/%d: Embedding %d terms with %s", step, total_steps, len(vocab.terms), model)
     logger.info("=" * 60)
     t0 = time.time()
     embedding = embed_vocabulary(
@@ -143,15 +172,17 @@ def main(
         cache_dir=Path(cache_dir),
     )
     logger.info(
-        "Step 2/5 done (%.1fs) — %d × %d on %s",
+        "Step %d done (%.1fs) — %d × %d on %s",
+        step,
         time.time() - t0,
         *embedding.embeddings.shape,
         embedding.device_used,
     )
 
     # Step 3: PaCMAP reduction
+    step += 1
     logger.info("=" * 60)
-    logger.info("Step 3/5: PaCMAP reduction to 3D")
+    logger.info("Step %d/%d: PaCMAP reduction to 3D", step, total_steps)
     logger.info("=" * 60)
     t0 = time.time()
     reduction = reduce_to_3d(
@@ -161,15 +192,17 @@ def main(
         fp_ratio=pacmap_fp_ratio,
     )
     logger.info(
-        "Step 3/5 done (%.1fs) — range [%.1f, %.1f], %d outliers",
+        "Step %d done (%.1fs) — range [%.1f, %.1f], %d outliers",
+        step,
         time.time() - t0,
         *reduction.coordinate_range,
         len(reduction.outlier_indices),
     )
 
     # Step 4: Clustering
+    step += 1
     logger.info("=" * 60)
-    logger.info("Step 4/5: HDBSCAN clustering")
+    logger.info("Step %d/%d: HDBSCAN clustering", step, total_steps)
     logger.info("=" * 60)
     t0 = time.time()
     cluster = cluster_points(
@@ -178,15 +211,17 @@ def main(
         min_cluster_size=hdbscan_min_cluster,
     )
     logger.info(
-        "Step 4/5 done (%.1fs) — %d clusters, %d noise",
+        "Step %d done (%.1fs) — %d clusters, %d noise",
+        step,
         time.time() - t0,
         len(cluster.clusters),
         cluster.noise_count,
     )
 
     # Step 5: Packaging
+    step += 1
     logger.info("=" * 60)
-    logger.info("Step 5/5: Packaging space JSON")
+    logger.info("Step %d/%d: Packaging space JSON", step, total_steps)
     logger.info("=" * 60)
     t0 = time.time()
     output_path = package_space(
@@ -196,7 +231,37 @@ def main(
         output_dir=output,
         compress=compress,
     )
-    logger.info("Step 5/5 done (%.1fs) — %s", time.time() - t0, output_path)
+    logger.info("Step %d done (%.1fs) — %s", step, time.time() - t0, output_path)
+
+    # Step 6: FAISS index
+    if not skip_faiss:
+        step += 1
+        logger.info("=" * 60)
+        logger.info("Step %d/%d: Building FAISS index", step, total_steps)
+        logger.info("=" * 60)
+        t0 = time.time()
+        faiss_path = build_faiss_index(embedding=embedding, output_dir=output)
+        logger.info("Step %d done (%.1fs) — %s", step, time.time() - t0, faiss_path)
+
+    # Step 7: ParamPaCMAP training
+    if not skip_parametric:
+        step += 1
+        logger.info("=" * 60)
+        logger.info("Step %d/%d: Training ParamPaCMAP", step, total_steps)
+        logger.info("=" * 60)
+        t0 = time.time()
+        param_path, _ = train_parametric(embedding=embedding, output_dir=output)
+        logger.info("Step %d done (%.1fs) — %s", step, time.time() - t0, param_path)
+
+    # Step 8: Export HD embeddings
+    if not skip_embeddings_export:
+        step += 1
+        logger.info("=" * 60)
+        logger.info("Step %d/%d: Exporting HD embeddings", step, total_steps)
+        logger.info("=" * 60)
+        t0 = time.time()
+        emb_path = export_embeddings(embedding=embedding, output_dir=output)
+        logger.info("Step %d done (%.1fs) — %s", step, time.time() - t0, emb_path)
 
     # Summary
     total_time = time.time() - total_start

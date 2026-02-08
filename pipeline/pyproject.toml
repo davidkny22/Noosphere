@@ -2,7 +2,7 @@
 name = "noosphere-pipeline"
 version = "0.1.0"
 description = "Space generation pipeline for Noosphere — 3D embedding space visualization"
-requires-python = ">=3.11"
+requires-python = ">=3.11,<3.12"
 dependencies = [
     "sentence-transformers>=2.7.0",
     "torch>=2.0.0",
@@ -13,7 +13,12 @@ dependencies = [
     "pydantic>=2.0.0",
     "click>=8.1.0",
     "tqdm>=4.65.0",
+    "parampacmap[mps]",
+    "faiss-cpu>=1.13.2",
 ]
 
 [project.scripts]
 build-space = "build_space:main"
+
+[tool.uv.sources]
+parampacmap = { git = "https://github.com/hyhuang00/ParamRepulsor.git" }
