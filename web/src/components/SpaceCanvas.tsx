@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Stats } from '@react-three/drei';
 import { PointCloud } from './PointCloud';
@@ -13,6 +14,15 @@ const FOG_FAR = 200;
 
 export function SpaceCanvas() {
   const space = useSpaceStore((s) => s.space);
+  const [showStats, setShowStats] = useState(false);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === '`') setShowStats((s) => !s);
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
 
   if (!space) return null;
 
@@ -42,7 +52,7 @@ export function SpaceCanvas() {
           enableZoom={false}
         />
         <ScrollZoom />
-        <Stats />
+        {showStats && <Stats />}
       </Canvas>
     </div>
   );
