@@ -89,17 +89,17 @@ export function computeColors(
       for (let i = 0; i < points.length; i++) {
         const s = scores[i]; // [-1, 1]
         if (s < 0) {
-          // Negative = red
+          // Negative = red (vivid)
           const t = -s;
-          colors[i * 3] = 0.5 + 0.4 * t;     // 0.5 → 0.9
-          colors[i * 3 + 1] = 0.5 - 0.3 * t;  // 0.5 → 0.2
-          colors[i * 3 + 2] = 0.5 - 0.3 * t;  // 0.5 → 0.2
+          colors[i * 3] = 0.4 + 0.6 * t;     // 0.4 → 1.0
+          colors[i * 3 + 1] = 0.4 - 0.35 * t; // 0.4 → 0.05
+          colors[i * 3 + 2] = 0.4 - 0.3 * t;  // 0.4 → 0.1
         } else {
-          // Positive = blue
+          // Positive = blue (vivid)
           const t = s;
-          colors[i * 3] = 0.5 - 0.3 * t;     // 0.5 → 0.2
-          colors[i * 3 + 1] = 0.5 - 0.1 * t;  // 0.5 → 0.4
-          colors[i * 3 + 2] = 0.5 + 0.4 * t;  // 0.5 → 0.9
+          colors[i * 3] = 0.4 - 0.3 * t;     // 0.4 → 0.1
+          colors[i * 3 + 1] = 0.4 - 0.1 * t;  // 0.4 → 0.3
+          colors[i * 3 + 2] = 0.4 + 0.6 * t;  // 0.4 → 1.0
         }
       }
     } else {
