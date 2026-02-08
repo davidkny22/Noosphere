@@ -2,6 +2,23 @@ import { create } from 'zustand';
 import type { SpaceManifest, PointData, ColorMode } from '../types/space';
 import type { EmbeddingService } from '../services/embeddingService';
 
+export interface UserEmbed {
+  id: string;
+  label: string;
+  pos: [number, number, number];
+  createdAt: number;
+}
+
+function loadUserEmbeds(spaceUrl: string): UserEmbed[] {
+  if (typeof localStorage === 'undefined') return [];
+  const raw = localStorage.getItem(`noosphere-user-embeds:${spaceUrl}`);
+  return raw ? JSON.parse(raw) : [];
+}
+
+function saveUserEmbeds(spaceUrl: string, embeds: UserEmbed[]) {
+  localStorage.setItem(`noosphere-user-embeds:${spaceUrl}`, JSON.stringify(embeds));
+}
+
 interface SpaceState {
   // Data
   spaceUrl: string;
@@ -40,6 +57,11 @@ interface SpaceState {
   // Intro animation
   introState: 'pending' | 'animating' | 'done';
 
+  // User embeds
+  userEmbeds: UserEmbed[];
+  selectedUserEmbed: UserEmbed | null;
+  hoveredUserEmbed: UserEmbed | null;
+
   // Mode
   isAdvancedMode: boolean;
 
@@ -60,6 +82,10 @@ interface SpaceState {
   setServiceStatus: (status: 'idle' | 'connecting' | 'ready' | 'error') => void;
   setNeighborhood: (center: number | null, indices: number[]) => void;
   setBiasScores: (scores: number[]) => void;
+  addUserEmbed: (embed: UserEmbed) => void;
+  removeUserEmbed: (id: string) => void;
+  selectUserEmbed: (embed: UserEmbed | null) => void;
+  hoverUserEmbed: (embed: UserEmbed | null) => void;
   setIntroState: (state: 'pending' | 'animating' | 'done') => void;
   toggleAdvancedMode: () => void;
 }
@@ -98,6 +124,10 @@ export const useSpaceStore = create<SpaceState>((set) => ({
 
   biasScores: [],
 
+  userEmbeds: loadUserEmbeds(DEFAULT_SPACE_URL),
+  selectedUserEmbed: null,
+  hoveredUserEmbed: null,
+
   introState: 'pending',
 
   isAdvancedMode: (typeof localStorage !== 'undefined' && localStorage.getItem('noosphere-advanced') === 'true') || false,
@@ -115,11 +145,14 @@ export const useSpaceStore = create<SpaceState>((set) => ({
     flyToTarget: null,
     flyToState: 'idle',
     colorMode: 'cluster',
+    userEmbeds: loadUserEmbeds(url),
+    selectedUserEmbed: null,
+    hoveredUserEmbed: null,
   }),
   setSpace: (space) => set({ space, loading: false, error: null, introState: 'animating' }),
   setLoading: (loading) => set({ loading }),
   setError: (error) => set({ error, loading: false }),
-  selectPoint: (point) => set({ selectedPoint: point }),
+  selectPoint: (point) => set({ selectedPoint: point, selectedUserEmbed: null }),
   hoverPoint: (point, index) => set({ hoveredPoint: point, hoveredIndex: index }),
   setHighlightedIndices: (indices) => set({ highlightedIndices: indices }),
   setSearchQuery: (query) => set({ searchQuery: query }),
@@ -131,6 +164,18 @@ export const useSpaceStore = create<SpaceState>((set) => ({
   setServiceStatus: (status) => set({ serviceStatus: status }),
   setNeighborhood: (center, indices) => set({ neighborCenter: center, neighborIndices: indices }),
   setBiasScores: (scores) => set({ biasScores: scores }),
+  addUserEmbed: (embed) => set((s) => {
+    const next = [...s.userEmbeds, embed];
+    saveUserEmbeds(s.spaceUrl, next);
+    return { userEmbeds: next };
+  }),
+  removeUserEmbed: (id) => set((s) => {
+    const next = s.userEmbeds.filter((e) => e.id !== id);
+    saveUserEmbeds(s.spaceUrl, next);
+    return { userEmbeds: next, selectedUserEmbed: s.selectedUserEmbed?.id === id ? null : s.selectedUserEmbed };
+  }),
+  selectUserEmbed: (embed) => set({ selectedUserEmbed: embed, selectedPoint: null }),
+  hoverUserEmbed: (embed) => set({ hoveredUserEmbed: embed }),
   setIntroState: (state) => set({ introState: state }),
   toggleAdvancedMode: () => set((s) => {
     const next = !s.isAdvancedMode;

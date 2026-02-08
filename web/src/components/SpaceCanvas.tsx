@@ -7,6 +7,8 @@ import { ClusterLabels } from './ClusterLabels';
 import { CameraAnimator } from './CameraAnimator';
 import { ScrollZoom } from './ScrollZoom';
 import { NeighborLines } from './NeighborLines';
+import { ProjectedMarker } from './ProjectedMarker';
+import { UserEmbedPoints } from './UserEmbedPoints';
 import { IntroAnimation } from './IntroAnimation';
 import { useSpaceStore } from '../store/useSpaceStore';
 
@@ -62,7 +64,9 @@ export function SpaceCanvas() {
         <directionalLight position={[50, 50, 50]} intensity={0.6} />
         <directionalLight position={[-50, -30, -50]} intensity={0.3} />
         <PointCloud />
+        <UserEmbedPoints />
         <NeighborLines />
+        <ProjectedMarker />
         <PointLabel />
         <ClusterLabels />
         <CameraAnimator />

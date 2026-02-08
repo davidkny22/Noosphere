@@ -3,6 +3,7 @@ import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 
 const ZOOM_SPEED = 5.0;
+const MIN_DISTANCE = 3;
 const MAX_DISTANCE = 300;
 
 /**
@@ -24,8 +25,9 @@ export function ScrollZoom() {
       const delta = -e.deltaY * 0.01 * ZOOM_SPEED;
       const move = direction.multiplyScalar(delta);
 
-      // Block zoom-out if camera would exceed max distance from origin
+      // Block zoom if camera would exceed distance bounds from origin
       const newPos = camera.position.clone().add(move);
+      if (delta > 0 && newPos.length() < MIN_DISTANCE) return;
       if (delta < 0 && newPos.length() > MAX_DISTANCE) return;
 
       camera.position.add(move);

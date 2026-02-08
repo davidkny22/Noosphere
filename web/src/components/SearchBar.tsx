@@ -72,6 +72,12 @@ export function SearchBar() {
         setTeleporting(true);
         try {
           const embedResult = await embeddingService.embed(result.text);
+          useSpaceStore.getState().addUserEmbed({
+            id: crypto.randomUUID(),
+            label: result.text,
+            pos: embedResult.coords_3d,
+            createdAt: Date.now(),
+          });
           flyTo(embedResult.coords_3d);
           selectPoint(null);
         } catch (err) {
@@ -155,7 +161,9 @@ export function SearchBar() {
           onKeyDown={handleKeyDown}
           onFocus={() => results.length > 0 && setShowDropdown(true)}
           placeholder='Search concepts... (press "/")'
-          className="w-full rounded-lg bg-black/70 px-4 py-2.5 text-sm text-white placeholder-white/30 backdrop-blur-sm outline-none ring-1 ring-white/10 focus:ring-white/30"
+          className={`w-full rounded-lg bg-black/70 px-4 py-2.5 text-sm text-white placeholder-white/30 backdrop-blur-sm outline-none ring-1 ${
+            teleporting ? 'ring-blue-400/50 animate-pulse' : 'ring-white/10 focus:ring-white/30'
+          }`}
         />
         {input && (
           <button
@@ -182,9 +190,9 @@ export function SearchBar() {
                 result.term
               ) : result.type === 'teleport' ? (
                 <span>
-                  <span className="text-blue-400">Teleport to </span>
+                  <span className="text-blue-400">Project </span>
                   <span className="text-white">&ldquo;{result.text}&rdquo;</span>
-                  {teleporting && <span className="text-white/30 ml-2">...</span>}
+                  {teleporting && <span className="text-blue-400/50 ml-2 animate-pulse">projecting...</span>}
                 </span>
               ) : (
                 <span>

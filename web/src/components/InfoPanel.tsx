@@ -3,8 +3,11 @@ import { useSpaceStore } from '../store/useSpaceStore';
 
 export function InfoPanel() {
   const selectedPoint = useSpaceStore((s) => s.selectedPoint);
+  const selectedUserEmbed = useSpaceStore((s) => s.selectedUserEmbed);
   const space = useSpaceStore((s) => s.space);
   const selectPoint = useSpaceStore((s) => s.selectPoint);
+  const selectUserEmbed = useSpaceStore((s) => s.selectUserEmbed);
+  const removeUserEmbed = useSpaceStore((s) => s.removeUserEmbed);
   const embeddingService = useSpaceStore((s) => s.embeddingService);
   const setNeighborhood = useSpaceStore((s) => s.setNeighborhood);
   const setColorMode = useSpaceStore((s) => s.setColorMode);
@@ -37,12 +40,63 @@ export function InfoPanel() {
 
   const handleClose = useCallback(() => {
     selectPoint(null);
+    selectUserEmbed(null);
     if (neighborCenter != null) {
       clearNeighbors();
     }
-  }, [selectPoint, neighborCenter, clearNeighbors]);
+  }, [selectPoint, selectUserEmbed, neighborCenter, clearNeighbors]);
 
-  if (!selectedPoint || !space) return null;
+  if (!space) return null;
+
+  // User embed panel
+  if (selectedUserEmbed) {
+    return (
+      <div className="fixed right-4 top-4 z-40 w-72 rounded-lg bg-black/80 p-4 text-white backdrop-blur-sm">
+        <div className="mb-3 flex items-start justify-between">
+          <h2 className="text-lg font-semibold">{selectedUserEmbed.label}</h2>
+          <button
+            onClick={handleClose}
+            className="ml-2 text-white/40 hover:text-white/80 text-lg leading-none"
+          >
+            &times;
+          </button>
+        </div>
+
+        <div className="mb-3">
+          <span className="inline-block rounded bg-amber-500/20 px-2 py-0.5 text-xs text-amber-300">
+            User Embed
+          </span>
+        </div>
+
+        <div className="mb-3">
+          <div className="text-xs uppercase tracking-wider text-white/40 mb-1">Position</div>
+          <div className="font-mono text-xs text-white/60">
+            [{selectedUserEmbed.pos.map((v) => v.toFixed(1)).join(', ')}]
+          </div>
+        </div>
+
+        <div className="mb-3">
+          <div className="text-xs uppercase tracking-wider text-white/40 mb-1">Created</div>
+          <div className="text-xs text-white/60">
+            {new Date(selectedUserEmbed.createdAt).toLocaleDateString()}
+          </div>
+        </div>
+
+        <button
+          onClick={() => {
+            removeUserEmbed(selectedUserEmbed.id);
+            selectUserEmbed(null);
+          }}
+          className="w-full rounded bg-red-500/20 px-3 py-1.5 text-xs text-red-300 hover:bg-red-500/30 hover:text-red-200"
+        >
+          Delete Embed
+        </button>
+      </div>
+    );
+  }
+
+  // Regular point panel
+  if (!selectedPoint) return null;
 
   const cluster = space.clusters.find((c) => c.id === selectedPoint.cluster);
   const pointIndex = space.points.findIndex((p) => p.term === selectedPoint.term);
