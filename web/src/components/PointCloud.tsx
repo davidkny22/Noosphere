@@ -57,6 +57,9 @@ export function PointCloud() {
   const space = useSpaceStore((s) => s.space);
   const colorMode = useSpaceStore((s) => s.colorMode);
   const highlightedIndices = useSpaceStore((s) => s.highlightedIndices);
+  const neighborIndices = useSpaceStore((s) => s.neighborIndices);
+  const neighborCenter = useSpaceStore((s) => s.neighborCenter);
+  const biasScores = useSpaceStore((s) => s.biasScores);
   const { raycaster } = useThree();
 
   const palette = useMemo(() => {
@@ -101,6 +104,9 @@ export function PointCloud() {
     const colors = computeColors(space.points, space.clusters, colorMode, {
       clusterPalette: palette,
       highlightedIndices: highlightedIndices.size > 0 ? highlightedIndices : undefined,
+      neighborIndices,
+      neighborCenter,
+      biasScores: biasScores.length > 0 ? biasScores : undefined,
     });
 
     const colorAttr = geometry.getAttribute('color') as THREE.BufferAttribute;
@@ -119,7 +125,7 @@ export function PointCloud() {
       scales.fill(1.0);
     }
     scaleAttr.needsUpdate = true;
-  }, [geometry, space, palette, colorMode, highlightedIndices]);
+  }, [geometry, space, palette, colorMode, highlightedIndices, neighborIndices, neighborCenter, biasScores]);
 
   // Set raycaster threshold for point picking
   useEffect(() => {
@@ -154,9 +160,14 @@ export function PointCloud() {
     }
   };
 
-  // Click on background deselects
+  // Click on background deselects and clears neighborhood
   const handlePointerMissed = () => {
-    useSpaceStore.getState().selectPoint(null);
+    const store = useSpaceStore.getState();
+    store.selectPoint(null);
+    if (store.neighborCenter != null) {
+      store.setNeighborhood(null, []);
+      store.setColorMode('cluster');
+    }
   };
 
   // Merge fog uniforms with custom uniforms so Three.js can update them

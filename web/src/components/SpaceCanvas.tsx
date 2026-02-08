@@ -6,6 +6,7 @@ import { PointLabel } from './PointLabel';
 import { ClusterLabels } from './ClusterLabels';
 import { CameraAnimator } from './CameraAnimator';
 import { ScrollZoom } from './ScrollZoom';
+import { NeighborLines } from './NeighborLines';
 import { useSpaceStore } from '../store/useSpaceStore';
 
 const FOG_COLOR = '#0a0a0a';
@@ -60,6 +61,7 @@ export function SpaceCanvas() {
         <directionalLight position={[50, 50, 50]} intensity={0.6} />
         <directionalLight position={[-50, -30, -50]} intensity={0.3} />
         <PointCloud />
+        <NeighborLines />
         <PointLabel />
         <ClusterLabels />
         <CameraAnimator />

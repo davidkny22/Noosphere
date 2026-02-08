@@ -2,6 +2,8 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useSpaceStore } from '../store/useSpaceStore';
 import { useSearch, type SearchResult } from '../hooks/useSearch';
 
+type TeleportItem = { type: 'teleport'; text: string };
+
 export function SearchBar() {
   const space = useSpaceStore((s) => s.space);
   const setSearchQuery = useSpaceStore((s) => s.setSearchQuery);
@@ -9,11 +11,13 @@ export function SearchBar() {
   const setColorMode = useSpaceStore((s) => s.setColorMode);
   const flyTo = useSpaceStore((s) => s.flyTo);
   const selectPoint = useSpaceStore((s) => s.selectPoint);
+  const embeddingService = useSpaceStore((s) => s.embeddingService);
 
   const { search, getHighlightIndices } = useSearch(space);
 
   const [input, setInput] = useState('');
-  const [results, setResults] = useState<SearchResult[]>([]);
+  const [results, setResults] = useState<(SearchResult | TeleportItem)[]>([]);
+  const [teleporting, setTeleporting] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedIdx, setSelectedIdx] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -34,8 +38,15 @@ export function SearchBar() {
 
     debounceRef.current = setTimeout(() => {
       const hits = search(input);
-      setResults(hits);
-      setShowDropdown(hits.length > 0);
+      const items: (SearchResult | TeleportItem)[] = [...hits];
+
+      // If no exact matches and embedding service available, offer teleport
+      if (hits.length === 0 && embeddingService && input.trim().length > 1) {
+        items.push({ type: 'teleport', text: input.trim() });
+      }
+
+      setResults(items);
+      setShowDropdown(items.length > 0);
       setSelectedIdx(-1);
       setSearchQuery(input);
 
@@ -53,10 +64,22 @@ export function SearchBar() {
   }, [input, search, getHighlightIndices, setHighlightedIndices, setColorMode, setSearchQuery]);
 
   const selectResult = useCallback(
-    (result: SearchResult) => {
+    async (result: SearchResult | TeleportItem) => {
       if (!space) return;
 
-      if (result.type === 'term') {
+      if (result.type === 'teleport') {
+        if (!embeddingService) return;
+        setTeleporting(true);
+        try {
+          const embedResult = await embeddingService.embed(result.text);
+          flyTo(embedResult.coords_3d);
+          selectPoint(null);
+        } catch (err) {
+          console.error('Teleport failed:', err);
+        } finally {
+          setTeleporting(false);
+        }
+      } else if (result.type === 'term') {
         const point = space.points[result.index]!;
         selectPoint(point);
         flyTo(point.pos);
@@ -67,7 +90,7 @@ export function SearchBar() {
 
       setShowDropdown(false);
     },
-    [space, flyTo, selectPoint]
+    [space, flyTo, selectPoint, embeddingService]
   );
 
   const clearSearch = useCallback(() => {
@@ -148,14 +171,21 @@ export function SearchBar() {
         <div className="mt-1 max-h-80 overflow-y-auto rounded-lg bg-black/80 py-1 backdrop-blur-sm ring-1 ring-white/10">
           {results.map((result, i) => (
             <button
-              key={result.type === 'term' ? `t-${result.index}` : `c-${result.cluster.id}`}
+              key={result.type === 'term' ? `t-${result.index}` : result.type === 'cluster' ? `c-${result.cluster.id}` : 'teleport'}
               onClick={() => selectResult(result)}
+              disabled={result.type === 'teleport' && teleporting}
               className={`w-full px-4 py-2 text-left text-sm ${
                 i === selectedIdx ? 'bg-white/10 text-white' : 'text-white/70 hover:bg-white/5'
-              }`}
+              } ${result.type === 'teleport' && teleporting ? 'opacity-50' : ''}`}
             >
               {result.type === 'term' ? (
                 result.term
+              ) : result.type === 'teleport' ? (
+                <span>
+                  <span className="text-blue-400">Teleport to </span>
+                  <span className="text-white">&ldquo;{result.text}&rdquo;</span>
+                  {teleporting && <span className="text-white/30 ml-2">...</span>}
+                </span>
               ) : (
                 <span>
                   <span className="text-white/40">Cluster: </span>
@@ -165,11 +195,6 @@ export function SearchBar() {
               )}
             </button>
           ))}
-          {results.length === 0 && (
-            <div className="px-4 py-3 text-sm text-white/30">
-              No matches found. Try a different term.
-            </div>
-          )}
         </div>
       )}
     </div>

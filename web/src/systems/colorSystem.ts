@@ -5,6 +5,9 @@ export interface ColorParams {
   clusterPalette?: Map<number, [number, number, number]>;
   highlightedIndices?: Set<number>;
   dimColor?: [number, number, number];
+  neighborIndices?: number[];
+  neighborCenter?: number | null;
+  biasScores?: number[];
 }
 
 const NOISE_COLOR: [number, number, number] = [0.55, 0.55, 0.55];
@@ -56,8 +59,61 @@ export function computeColors(
         colors[i * 3 + 2] = dim[2];
       }
     }
+  } else if (mode === 'neighborhood') {
+    const neighborSet = new Set(params.neighborIndices ?? []);
+    const center = params.neighborCenter;
+    const dim = params.dimColor ?? DIM_COLOR;
+
+    for (let i = 0; i < points.length; i++) {
+      if (center != null && i === center) {
+        // Center point = white
+        colors[i * 3] = 1.0;
+        colors[i * 3 + 1] = 1.0;
+        colors[i * 3 + 2] = 1.0;
+      } else if (neighborSet.has(i)) {
+        // Neighbor = cluster color
+        const point = points[i]!;
+        const rgb = palette.get(point.cluster) ?? NOISE_COLOR;
+        colors[i * 3] = rgb[0];
+        colors[i * 3 + 1] = rgb[1];
+        colors[i * 3 + 2] = rgb[2];
+      } else {
+        colors[i * 3] = dim[0];
+        colors[i * 3 + 1] = dim[1];
+        colors[i * 3 + 2] = dim[2];
+      }
+    }
+  } else if (mode === 'bias_gradient') {
+    const scores = params.biasScores;
+    if (scores && scores.length === points.length) {
+      for (let i = 0; i < points.length; i++) {
+        const s = scores[i]; // [-1, 1]
+        if (s < 0) {
+          // Negative = red
+          const t = -s;
+          colors[i * 3] = 0.5 + 0.4 * t;     // 0.5 → 0.9
+          colors[i * 3 + 1] = 0.5 - 0.3 * t;  // 0.5 → 0.2
+          colors[i * 3 + 2] = 0.5 - 0.3 * t;  // 0.5 → 0.2
+        } else {
+          // Positive = blue
+          const t = s;
+          colors[i * 3] = 0.5 - 0.3 * t;     // 0.5 → 0.2
+          colors[i * 3 + 1] = 0.5 - 0.1 * t;  // 0.5 → 0.4
+          colors[i * 3 + 2] = 0.5 + 0.4 * t;  // 0.5 → 0.9
+        }
+      }
+    } else {
+      // No scores yet — cluster fallback
+      for (let i = 0; i < points.length; i++) {
+        const point = points[i]!;
+        const rgb = palette.get(point.cluster) ?? NOISE_COLOR;
+        colors[i * 3] = rgb[0];
+        colors[i * 3 + 1] = rgb[1];
+        colors[i * 3 + 2] = rgb[2];
+      }
+    }
   } else {
-    // Phase 1 modes (bias_gradient, neighborhood) — fall back to cluster coloring
+    // Unknown mode — fall back to cluster
     for (let i = 0; i < points.length; i++) {
       const point = points[i]!;
       const rgb = palette.get(point.cluster) ?? NOISE_COLOR;
