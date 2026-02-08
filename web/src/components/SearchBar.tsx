@@ -40,8 +40,8 @@ export function SearchBar() {
       const hits = search(input);
       const items: (SearchResult | TeleportItem)[] = [...hits];
 
-      // If no exact matches and embedding service available, offer teleport
-      if (hits.length === 0 && embeddingService && input.trim().length > 1) {
+      // Always offer teleport when embedding service is available
+      if (embeddingService && input.trim().length > 1) {
         items.push({ type: 'teleport', text: input.trim() });
       }
 
