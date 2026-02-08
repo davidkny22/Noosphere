@@ -3,16 +3,18 @@ import { SpaceCanvas } from './components/SpaceCanvas';
 import { LoadingScreen } from './components/LoadingScreen';
 import { InfoPanel } from './components/InfoPanel';
 import { SearchBar } from './components/SearchBar';
-
-const SPACE_URL = '/spaces/minilm-10k.json.gz';
+import { SpaceSelector } from './components/SpaceSelector';
+import { useSpaceStore } from './store/useSpaceStore';
 
 function App() {
-  useSpaceLoader(SPACE_URL);
+  const spaceUrl = useSpaceStore((s) => s.spaceUrl);
+  useSpaceLoader(spaceUrl);
 
   return (
     <>
       <LoadingScreen />
       <SpaceCanvas />
+      <SpaceSelector />
       <SearchBar />
       <InfoPanel />
     </>
