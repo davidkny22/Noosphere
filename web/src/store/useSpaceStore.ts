@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { SpaceManifest, PointData, ColorMode } from '../types/space';
+import type { EmbeddingService } from '../services/embeddingService';
 
 interface SpaceState {
   // Data
@@ -24,6 +25,18 @@ interface SpaceState {
   // Color
   colorMode: ColorMode;
 
+  // Embedding service
+  embeddingService: EmbeddingService | null;
+  serviceMode: 'remote' | 'local' | null;
+  serviceStatus: 'idle' | 'connecting' | 'ready' | 'error';
+
+  // Neighborhood
+  neighborIndices: number[];
+  neighborCenter: number | null;
+
+  // Bias
+  biasScores: number[];
+
   // Actions
   setSpaceUrl: (url: string) => void;
   setSpace: (space: SpaceManifest) => void;
@@ -37,6 +50,10 @@ interface SpaceState {
   cancelFlyTo: () => void;
   setFlyToState: (state: 'idle' | 'animating' | 'settling') => void;
   setColorMode: (mode: ColorMode) => void;
+  setEmbeddingService: (service: EmbeddingService, mode: 'remote' | 'local') => void;
+  setServiceStatus: (status: 'idle' | 'connecting' | 'ready' | 'error') => void;
+  setNeighborhood: (center: number | null, indices: number[]) => void;
+  setBiasScores: (scores: number[]) => void;
 }
 
 const DEFAULT_SPACE_URL = '/spaces/minilm-10k.json.gz';
@@ -64,6 +81,15 @@ export const useSpaceStore = create<SpaceState>((set) => ({
 
   colorMode: 'cluster',
 
+  embeddingService: null,
+  serviceMode: null,
+  serviceStatus: 'idle',
+
+  neighborIndices: [],
+  neighborCenter: null,
+
+  biasScores: [],
+
   setSpaceUrl: (url) => set({
     spaceUrl: url,
     space: null,
@@ -89,4 +115,8 @@ export const useSpaceStore = create<SpaceState>((set) => ({
   cancelFlyTo: () => set({ flyToTarget: null, flyToState: 'idle' }),
   setFlyToState: (state) => set({ flyToState: state }),
   setColorMode: (mode) => set({ colorMode: mode }),
+  setEmbeddingService: (service, mode) => set({ embeddingService: service, serviceMode: mode, serviceStatus: 'ready' }),
+  setServiceStatus: (status) => set({ serviceStatus: status }),
+  setNeighborhood: (center, indices) => set({ neighborCenter: center, neighborIndices: indices }),
+  setBiasScores: (scores) => set({ biasScores: scores }),
 }));

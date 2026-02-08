@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import pako from 'pako';
 import type { SpaceManifest } from '../types/space';
 import { useSpaceStore } from '../store/useSpaceStore';
+import { createEmbeddingService } from '../services/serviceFactory';
 
 async function loadSpace(url: string): Promise<SpaceManifest> {
   const response = await fetch(url);
@@ -48,14 +49,32 @@ export function useSpaceLoader(url: string) {
   const setSpace = useSpaceStore((s) => s.setSpace);
   const setLoading = useSpaceStore((s) => s.setLoading);
   const setError = useSpaceStore((s) => s.setError);
+  const setEmbeddingService = useSpaceStore((s) => s.setEmbeddingService);
+  const setServiceStatus = useSpaceStore((s) => s.setServiceStatus);
 
   useEffect(() => {
     let cancelled = false;
 
     setLoading(true);
     loadSpace(url)
-      .then((space) => {
-        if (!cancelled) setSpace(space);
+      .then(async (space) => {
+        if (cancelled) return;
+        setSpace(space);
+
+        // Init embedding service in background (non-blocking)
+        setServiceStatus('connecting');
+        try {
+          const terms = space.points.map((p) => p.term);
+          const positions = space.points.map((p) => p.pos as [number, number, number]);
+          const { service, mode } = await createEmbeddingService('auto', url, terms, positions);
+          if (!cancelled) {
+            setEmbeddingService(service, mode);
+          }
+        } catch {
+          if (!cancelled) {
+            setServiceStatus('error');
+          }
+        }
       })
       .catch((err: unknown) => {
         if (!cancelled) {
@@ -66,5 +85,5 @@ export function useSpaceLoader(url: string) {
     return () => {
       cancelled = true;
     };
-  }, [url, setSpace, setLoading, setError]);
+  }, [url, setSpace, setLoading, setError, setEmbeddingService, setServiceStatus]);
 }
