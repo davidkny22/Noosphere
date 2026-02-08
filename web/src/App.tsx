@@ -4,6 +4,7 @@ import { LoadingScreen } from './components/LoadingScreen';
 import { InfoPanel } from './components/InfoPanel';
 import { SearchBar } from './components/SearchBar';
 import { SpaceSelector } from './components/SpaceSelector';
+import { BiasProbePanel } from './components/BiasProbePanel';
 import { useSpaceStore } from './store/useSpaceStore';
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
       <SpaceSelector />
       <SearchBar />
       <InfoPanel />
+      <BiasProbePanel />
     </>
   );
 }
