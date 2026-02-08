@@ -37,6 +37,12 @@ interface SpaceState {
   // Bias
   biasScores: number[];
 
+  // Intro animation
+  introState: 'pending' | 'animating' | 'done';
+
+  // Mode
+  isAdvancedMode: boolean;
+
   // Actions
   setSpaceUrl: (url: string) => void;
   setSpace: (space: SpaceManifest) => void;
@@ -54,6 +60,8 @@ interface SpaceState {
   setServiceStatus: (status: 'idle' | 'connecting' | 'ready' | 'error') => void;
   setNeighborhood: (center: number | null, indices: number[]) => void;
   setBiasScores: (scores: number[]) => void;
+  setIntroState: (state: 'pending' | 'animating' | 'done') => void;
+  toggleAdvancedMode: () => void;
 }
 
 const DEFAULT_SPACE_URL = '/spaces/minilm-10k.json.gz';
@@ -90,6 +98,10 @@ export const useSpaceStore = create<SpaceState>((set) => ({
 
   biasScores: [],
 
+  introState: 'pending',
+
+  isAdvancedMode: (typeof localStorage !== 'undefined' && localStorage.getItem('noosphere-advanced') === 'true') || false,
+
   setSpaceUrl: (url) => set({
     spaceUrl: url,
     space: null,
@@ -104,7 +116,7 @@ export const useSpaceStore = create<SpaceState>((set) => ({
     flyToState: 'idle',
     colorMode: 'cluster',
   }),
-  setSpace: (space) => set({ space, loading: false, error: null }),
+  setSpace: (space) => set({ space, loading: false, error: null, introState: 'animating' }),
   setLoading: (loading) => set({ loading }),
   setError: (error) => set({ error, loading: false }),
   selectPoint: (point) => set({ selectedPoint: point }),
@@ -119,4 +131,10 @@ export const useSpaceStore = create<SpaceState>((set) => ({
   setServiceStatus: (status) => set({ serviceStatus: status }),
   setNeighborhood: (center, indices) => set({ neighborCenter: center, neighborIndices: indices }),
   setBiasScores: (scores) => set({ biasScores: scores }),
+  setIntroState: (state) => set({ introState: state }),
+  toggleAdvancedMode: () => set((s) => {
+    const next = !s.isAdvancedMode;
+    localStorage.setItem('noosphere-advanced', String(next));
+    return { isAdvancedMode: next };
+  }),
 }));

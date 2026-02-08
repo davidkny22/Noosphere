@@ -60,6 +60,7 @@ export function PointCloud() {
   const neighborIndices = useSpaceStore((s) => s.neighborIndices);
   const neighborCenter = useSpaceStore((s) => s.neighborCenter);
   const biasScores = useSpaceStore((s) => s.biasScores);
+  const introState = useSpaceStore((s) => s.introState);
   const { raycaster } = useThree();
 
   const palette = useMemo(() => {
@@ -132,8 +133,9 @@ export function PointCloud() {
     raycaster.params.Points = { threshold: 0.5 };
   }, [raycaster]);
 
-  // Handle hover
+  // Handle hover (gated during intro animation)
   const handlePointerOver = (e: THREE.Intersection & { stopPropagation: () => void }) => {
+    if (introState !== 'done') return;
     const index = (e as unknown as { index?: number }).index;
     if (index == null || !space) return;
     e.stopPropagation();
@@ -149,8 +151,9 @@ export function PointCloud() {
     document.body.style.cursor = 'auto';
   };
 
-  // Handle click
+  // Handle click (gated during intro animation)
   const handleClick = (e: THREE.Intersection & { stopPropagation: () => void }) => {
+    if (introState !== 'done') return;
     const index = (e as unknown as { index?: number }).index;
     if (index == null || !space) return;
     e.stopPropagation();

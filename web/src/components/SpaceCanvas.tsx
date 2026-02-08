@@ -7,6 +7,7 @@ import { ClusterLabels } from './ClusterLabels';
 import { CameraAnimator } from './CameraAnimator';
 import { ScrollZoom } from './ScrollZoom';
 import { NeighborLines } from './NeighborLines';
+import { IntroAnimation } from './IntroAnimation';
 import { useSpaceStore } from '../store/useSpaceStore';
 
 const FOG_COLOR = '#0a0a0a';
@@ -75,6 +76,7 @@ export function SpaceCanvas() {
           maxDistance={500}
           enableZoom={false}
         />
+        <IntroAnimation />
         <ScrollZoom />
         {showStats && <Stats />}
       </Canvas>

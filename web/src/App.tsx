@@ -5,10 +5,12 @@ import { InfoPanel } from './components/InfoPanel';
 import { SearchBar } from './components/SearchBar';
 import { SpaceSelector } from './components/SpaceSelector';
 import { BiasProbePanel } from './components/BiasProbePanel';
+import { ModeToggle } from './components/ModeToggle';
 import { useSpaceStore } from './store/useSpaceStore';
 
 function App() {
   const spaceUrl = useSpaceStore((s) => s.spaceUrl);
+  const isAdvancedMode = useSpaceStore((s) => s.isAdvancedMode);
   useSpaceLoader(spaceUrl);
 
   return (
@@ -18,7 +20,8 @@ function App() {
       <SpaceSelector />
       <SearchBar />
       <InfoPanel />
-      <BiasProbePanel />
+      {isAdvancedMode && <BiasProbePanel />}
+      <ModeToggle />
     </>
   );
 }
