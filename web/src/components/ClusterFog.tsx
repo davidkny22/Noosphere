@@ -40,7 +40,7 @@ export function ClusterFog() {
   return (
     <>
       {space.clusters.map((cluster) => {
-        const radius = Math.sqrt(cluster.size) * 0.3;
+        const radius = Math.sqrt(cluster.size) * 0.15;
         const rgb = palette.get(cluster.id);
         const clusterColor = rgb
           ? new THREE.Color(rgb[0], rgb[1], rgb[2])
@@ -55,7 +55,7 @@ export function ClusterFog() {
             <spriteMaterial
               map={glowTexture}
               transparent
-              opacity={Math.min(0.08 * Math.log(cluster.size + 1), 0.3)}
+              opacity={Math.min(0.03 * Math.log(cluster.size + 1), 0.12)}
               blending={THREE.AdditiveBlending}
               fog={false}
               depthWrite={false}

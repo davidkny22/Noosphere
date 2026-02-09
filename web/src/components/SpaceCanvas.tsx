@@ -23,6 +23,7 @@ const NUM_POINTS_FOG_THRESHOLD = 50000;
 
 export function SpaceCanvas() {
   const space = useSpaceStore((s) => s.space);
+  const spaceScale = useSpaceStore((s) => s.spaceScale);
   const [showStats, setShowStats] = useState(false);
 
   useEffect(() => {
@@ -48,11 +49,13 @@ export function SpaceCanvas() {
       if (dist > maxDist) maxDist = dist;
     }
 
-    // multiplier: 1.0 for dense (>=5K), up to 2.0 for sparse (<5K)
+    // multiplier: 1.0 for dense (>=50K), up to 2.0 for sparse (<50K)
     const multiplier = 2 - Math.min(n, NUM_POINTS_FOG_THRESHOLD) / NUM_POINTS_FOG_THRESHOLD;
+    // Tighter fog for very large spaces so it's not a solid wall
+    const isLarge = n > 50000;
     return {
-      fogNear: maxDist * 1.2,
-      fogFar: maxDist * 4 * multiplier,
+      fogNear: isLarge ? maxDist * 0.3 : maxDist * 1.2,
+      fogFar: isLarge ? maxDist * 1.5 : maxDist * 4 * multiplier,
     };
   }, [space]);
 
@@ -61,24 +64,26 @@ export function SpaceCanvas() {
   return (
     <div className="fixed inset-0">
       <Canvas
-        camera={{ position: [0, 0, 80], fov: 60, near: 0.1, far: 500 }}
+        camera={{ position: [0, 0, 80], fov: 60, near: 0.1, far: 1500 }}
         gl={{ antialias: true }}
         style={{ background: FOG_COLOR }}
       >
-        <fog attach="fog" args={[FOG_COLOR, fogNear, fogFar]} />
+        <fog attach="fog" args={[FOG_COLOR, fogNear * spaceScale, fogFar * spaceScale]} />
         <ambientLight intensity={0.4} />
         <directionalLight position={[50, 50, 50]} intensity={0.6} />
         <directionalLight position={[-50, -30, -50]} intensity={0.3} />
-        <ClusterFog />
-        <PointCloud />
-        <UserEmbedPoints />
-        <NeighborLines />
-        <ProjectedMarker />
-        <ComparisonMarkers />
-        <AnalogyMarkers />
-        <Breadcrumbs />
-        <PointLabel />
-        <ClusterLabels />
+        <group scale={[spaceScale, spaceScale, spaceScale]}>
+          {/* <ClusterFog /> */}
+          <PointCloud />
+          <UserEmbedPoints />
+          <NeighborLines />
+          <ProjectedMarker />
+          <ComparisonMarkers />
+          <AnalogyMarkers />
+          <Breadcrumbs />
+          <PointLabel />
+          <ClusterLabels />
+        </group>
         <CameraAnimator />
         <OrbitControls
           makeDefault

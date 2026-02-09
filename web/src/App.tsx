@@ -9,6 +9,7 @@ import { ComparisonPanel } from './components/ComparisonPanel';
 import { AnalogyPanel } from './components/AnalogyPanel';
 import { PrecisionToggle } from './components/PrecisionToggle';
 import { ControlModeToggle } from './components/ControlModeToggle';
+import { SpaceScaleToggle } from './components/SpaceScaleToggle';
 import { ModeToggle } from './components/ModeToggle';
 import { useSpaceStore } from './store/useSpaceStore';
 
@@ -24,10 +25,15 @@ function App() {
       <SpaceSelector />
       <SearchBar />
       <InfoPanel />
-      {isAdvancedMode && <BiasProbePanel />}
-      {isAdvancedMode && <ComparisonPanel />}
-      {isAdvancedMode && <AnalogyPanel />}
+      {isAdvancedMode && (
+        <div className="fixed left-4 top-20 bottom-4 z-40 flex flex-col gap-3 overflow-y-auto">
+          <BiasProbePanel />
+          <ComparisonPanel />
+          <AnalogyPanel />
+        </div>
+      )}
       <PrecisionToggle />
+      <SpaceScaleToggle />
       <ControlModeToggle />
       <ModeToggle />
     </>

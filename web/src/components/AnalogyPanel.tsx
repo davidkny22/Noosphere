@@ -41,7 +41,7 @@ export function AnalogyPanel() {
   if (!isAdvancedMode || !embeddingService) return null;
 
   return (
-    <div className="fixed left-4 bottom-48 z-40 w-64 rounded-lg bg-black/80 p-4 text-white backdrop-blur-sm">
+    <div className="w-64 rounded-lg bg-black/80 p-4 text-white backdrop-blur-sm">
       <div className="mb-3 text-xs uppercase tracking-wider text-white/40">
         Analogy Explorer
       </div>

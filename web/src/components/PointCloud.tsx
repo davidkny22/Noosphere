@@ -10,6 +10,7 @@ import { computeColors, buildClusterPalette } from '../systems/colorSystem';
 const POINT_SIZE_SCALE = 200;
 const POINT_SIZE_LOG_BASE = 8;
 const SCREEN_SCALE = 40.0;
+const LARGE_SPACE_THRESHOLD = 50000;
 
 const vertexShader = /* glsl */ `
 attribute vec3 color;
@@ -68,7 +69,7 @@ export function PointCloud() {
     return buildClusterPalette(space.clusters);
   }, [space]);
 
-  // Compute point size from point count
+  // Compute point size from point count — smaller for large spaces
   const pointSize = useMemo(() => {
     if (!space) return 10;
     const n = space.points.length;

@@ -92,6 +92,9 @@ interface SpaceState {
   // Control mode
   controlMode: 'orbit' | 'fly';
 
+  // Space scale
+  spaceScale: number;
+
   // Mode
   isAdvancedMode: boolean;
 
@@ -120,6 +123,7 @@ interface SpaceState {
   setComparisonResult: (result: SpaceState['comparisonResult']) => void;
   setPrecisionMode: (mode: '3d' | 'hd') => void;
   setControlMode: (mode: 'orbit' | 'fly') => void;
+  cycleSpaceScale: () => void;
   addSearchHistory: (entry: { query: string; pos: [number, number, number]; timestamp: number }) => void;
   clearSearchHistory: () => void;
   setIntroState: (state: 'pending' | 'animating' | 'done') => void;
@@ -176,6 +180,7 @@ export const useSpaceStore = create<SpaceState>((set) => ({
   precisionMode: '3d',
 
   controlMode: 'orbit',
+  spaceScale: 1,
 
   isAdvancedMode: (typeof localStorage !== 'undefined' && localStorage.getItem('noosphere-advanced') === 'true') || false,
 
@@ -228,6 +233,11 @@ export const useSpaceStore = create<SpaceState>((set) => ({
   setComparisonResult: (result) => set({ comparisonResult: result }),
   setPrecisionMode: (mode) => set({ precisionMode: mode }),
   setControlMode: (mode) => set({ controlMode: mode }),
+  cycleSpaceScale: () => set((s) => {
+    const scales = [1, 2, 3];
+    const next = scales[(scales.indexOf(s.spaceScale) + 1) % scales.length]!;
+    return { spaceScale: next };
+  }),
   addSearchHistory: (entry) => set((s) => ({
     searchHistory: [...s.searchHistory, entry],
   })),
