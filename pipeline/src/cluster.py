@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 
 import numpy as np
+from openai import OpenAI
 from sklearn.cluster import HDBSCAN
 
 from .types import ClusterInfo, ClusterResult, EmbeddingResult, ReductionResult
@@ -10,11 +11,32 @@ from .types import ClusterInfo, ClusterResult, EmbeddingResult, ReductionResult
 logger = logging.getLogger(__name__)
 
 
+def generate_cluster_label(representative_terms: list[str], client: OpenAI | None) -> str:
+    """Generate a concise cluster label using LLM, with medoid fallback."""
+    if not client:
+        return representative_terms[0]
+
+    try:
+        response = client.responses.create(
+            model="5-nano",
+            reasoning={"effort": "medium"},
+            input=f"Create a concise 1-3 word category label for this group of related concepts: {', '.join(representative_terms[:10])}. Reply with ONLY the label, nothing else.",
+        )
+        label = response.output_text.strip()
+        if label:
+            return label
+    except Exception as e:
+        logger.warning("LLM label generation failed: %s — using medoid fallback", e)
+
+    return representative_terms[0]
+
+
 def cluster_points(
     embedding: EmbeddingResult,
     reduction: ReductionResult,
     min_cluster_size: int = 30,
     min_samples: int = 5,
+    label_client: OpenAI | None = None,
 ) -> ClusterResult:
     params = {
         "min_cluster_size": min_cluster_size,
@@ -58,13 +80,12 @@ def cluster_points(
         centroid_hd = cluster_embeddings.mean(axis=0)
         distances = np.linalg.norm(cluster_embeddings - centroid_hd, axis=1)
 
-        # Medoid: term closest to HD centroid -> cluster label
-        medoid_idx = int(np.argmin(distances))
-        label = cluster_terms[medoid_idx]
-
         # Top-5 most central terms
         top5_local = np.argsort(distances)[:5]
         representative_terms = [cluster_terms[int(i)] for i in top5_local]
+
+        # Cluster label: LLM-generated or medoid fallback
+        label = generate_cluster_label(representative_terms, label_client)
 
         # 3D centroid for label positioning
         centroid_3d = cluster_positions.mean(axis=0).tolist()

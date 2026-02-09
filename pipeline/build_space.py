@@ -2,8 +2,8 @@
 """Build a 3D embedding space from vocabulary.
 
 Usage:
-    uv run build_space.py --model minilm --vocab-size 10000
-    uv run build_space.py --model qwen3  --vocab-size 10000 --device mps
+    uv run build_space.py --model minilm
+    uv run build_space.py --model qwen3 --batch-size 256 --device mps
 """
 from __future__ import annotations
 
@@ -43,7 +43,7 @@ PIPELINE_DIR = Path(__file__).parent
 @click.option(
     "--vocab-size",
     type=int,
-    default=10000,
+    default=200000,
     show_default=True,
     help="Target vocabulary size.",
 )
@@ -71,28 +71,28 @@ PIPELINE_DIR = Path(__file__).parent
 @click.option(
     "--pacmap-neighbors",
     type=int,
-    default=15,
+    default=20,
     show_default=True,
     help="PaCMAP n_neighbors (5-50). Higher preserves more global structure.",
 )
 @click.option(
     "--pacmap-mn-ratio",
     type=float,
-    default=0.5,
+    default=1.0,
     show_default=True,
     help="PaCMAP MN_ratio.",
 )
 @click.option(
     "--pacmap-fp-ratio",
     type=float,
-    default=2.0,
+    default=4.0,
     show_default=True,
     help="PaCMAP FP_ratio.",
 )
 @click.option(
     "--hdbscan-min-cluster",
     type=int,
-    default=20,
+    default=50,
     show_default=True,
     help="HDBSCAN min_cluster_size.",
 )
@@ -127,6 +127,13 @@ PIPELINE_DIR = Path(__file__).parent
     show_default=True,
     help="Directory for embedding cache.",
 )
+@click.option(
+    "--label-model",
+    type=click.Choice(["5-nano", "medoid"]),
+    default="5-nano",
+    show_default=True,
+    help="Cluster labeling method. 5-nano uses OpenAI API (requires OPENAI_API_KEY).",
+)
 def main(
     model: str,
     vocab_size: int,
@@ -142,6 +149,7 @@ def main(
     skip_parametric: bool,
     skip_embeddings_export: bool,
     cache_dir: str,
+    label_model: str,
 ) -> None:
     total_start = time.time()
     data_dir = PIPELINE_DIR / "data"
@@ -199,6 +207,18 @@ def main(
         len(reduction.outlier_indices),
     )
 
+    # Create label client if using LLM labels
+    label_client = None
+    if label_model == "5-nano":
+        import os
+        api_key = os.environ.get("OPENAI_API_KEY")
+        if api_key:
+            from openai import OpenAI
+            label_client = OpenAI(api_key=api_key)
+            logger.info("Using 5-nano for cluster labels")
+        else:
+            logger.warning("OPENAI_API_KEY not set — falling back to medoid labels")
+
     # Step 4: Clustering
     step += 1
     logger.info("=" * 60)
@@ -209,6 +229,7 @@ def main(
         embedding=embedding,
         reduction=reduction,
         min_cluster_size=hdbscan_min_cluster,
+        label_client=label_client,
     )
     logger.info(
         "Step %d done (%.1fs) — %d clusters, %d noise",
