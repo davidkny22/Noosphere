@@ -88,18 +88,30 @@ export function computeColors(
     if (scores && scores.length === points.length) {
       for (let i = 0; i < points.length; i++) {
         const s = scores[i]; // [-1, 1]
-        if (s < 0) {
-          // Negative = red (vivid)
-          const t = -s;
-          colors[i * 3] = 0.4 + 0.6 * t;     // 0.4 → 1.0
-          colors[i * 3 + 1] = 0.4 - 0.35 * t; // 0.4 → 0.05
-          colors[i * 3 + 2] = 0.4 - 0.3 * t;  // 0.4 → 0.1
+        const mag = Math.abs(s);
+
+        // Neutral points nearly disappear; strongly biased points glow
+        // mag < 0.15 → very dim (0.03)
+        // mag 0.15-1.0 → ramp up to full bright (bloom-triggering > 0.8)
+        if (mag < 0.15) {
+          // Nearly invisible
+          colors[i * 3] = 0.03;
+          colors[i * 3 + 1] = 0.03;
+          colors[i * 3 + 2] = 0.03;
         } else {
-          // Positive = blue (vivid)
-          const t = s;
-          colors[i * 3] = 0.4 - 0.3 * t;     // 0.4 → 0.1
-          colors[i * 3 + 1] = 0.4 - 0.1 * t;  // 0.4 → 0.3
-          colors[i * 3 + 2] = 0.4 + 0.6 * t;  // 0.4 → 1.0
+          // Intensity ramps from 0 at mag=0.15 to 1 at mag=1.0
+          const intensity = (mag - 0.15) / 0.85;
+          if (s < 0) {
+            // Red pole — glow bright red
+            colors[i * 3] = 0.15 + 0.95 * intensity;      // up to 1.1 (clamped by GPU)
+            colors[i * 3 + 1] = 0.03 + 0.02 * intensity;  // stays dark
+            colors[i * 3 + 2] = 0.03 + 0.05 * intensity;  // hint of warmth
+          } else {
+            // Blue pole — glow bright blue
+            colors[i * 3] = 0.03 + 0.05 * intensity;      // hint of cool
+            colors[i * 3 + 1] = 0.03 + 0.15 * intensity;  // slight cyan
+            colors[i * 3 + 2] = 0.15 + 0.95 * intensity;  // up to 1.1
+          }
         }
       }
     } else {

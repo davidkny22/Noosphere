@@ -63,6 +63,7 @@ interface SpaceState {
   // Bias
   biasScores: number[];
   biasLinesEnabled: boolean;
+  biasPoles: { a: string; b: string } | null;
 
   // Search history breadcrumbs
   searchHistory: Array<{ query: string; pos: [number, number, number]; timestamp: number }>;
@@ -120,6 +121,7 @@ interface SpaceState {
   setNeighborhood: (center: number | null, indices: number[]) => void;
   setBiasScores: (scores: number[]) => void;
   setBiasLinesEnabled: (enabled: boolean) => void;
+  setBiasPoles: (poles: { a: string; b: string } | null) => void;
   addUserEmbed: (embed: UserEmbed) => void;
   removeUserEmbed: (id: string) => void;
   selectUserEmbed: (embed: UserEmbed | null) => void;
@@ -172,6 +174,7 @@ export const useSpaceStore = create<SpaceState>((set) => ({
 
   biasScores: [],
   biasLinesEnabled: false,
+  biasPoles: null,
 
   searchHistory: [],
 
@@ -227,6 +230,7 @@ export const useSpaceStore = create<SpaceState>((set) => ({
   setNeighborhood: (center, indices) => set({ neighborCenter: center, neighborIndices: indices }),
   setBiasScores: (scores) => set({ biasScores: scores }),
   setBiasLinesEnabled: (enabled) => set({ biasLinesEnabled: enabled }),
+  setBiasPoles: (poles) => set({ biasPoles: poles }),
   addUserEmbed: (embed) => set((s) => {
     const next = [...s.userEmbeds, embed];
     saveUserEmbeds(s.spaceUrl, next);

@@ -8,6 +8,7 @@ import { CameraAnimator } from './CameraAnimator';
 import { ScrollZoom } from './ScrollZoom';
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import { NeighborLines } from './NeighborLines';
+import { BiasLines } from './BiasLines';
 import { ProjectedMarker } from './ProjectedMarker';
 import { UserEmbedPoints } from './UserEmbedPoints';
 import { IntroAnimation } from './IntroAnimation';
@@ -78,6 +79,7 @@ export function SpaceCanvas() {
           <PointCloud />
           <UserEmbedPoints />
           <NeighborLines />
+          <BiasLines />
           <ProjectedMarker />
           <ComparisonMarkers />
           <AnalogyMarkers />

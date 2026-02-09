@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { useSpaceStore } from '../store/useSpaceStore';
 
 export function BiasProbePanel() {
@@ -8,10 +8,9 @@ export function BiasProbePanel() {
   const colorMode = useSpaceStore((s) => s.colorMode);
   const space = useSpaceStore((s) => s.space);
   const biasScores = useSpaceStore((s) => s.biasScores);
-  const selectedPoint = useSpaceStore((s) => s.selectedPoint);
   const biasLinesEnabled = useSpaceStore((s) => s.biasLinesEnabled);
   const setBiasLinesEnabled = useSpaceStore((s) => s.setBiasLinesEnabled);
-  const setNeighborhood = useSpaceStore((s) => s.setNeighborhood);
+  const setBiasPoles = useSpaceStore((s) => s.setBiasPoles);
 
   const [poleA, setPoleA] = useState('');
   const [poleB, setPoleB] = useState('');
@@ -28,13 +27,14 @@ export function BiasProbePanel() {
         .sort((a, b) => a.index - b.index)
         .map((s) => s.score);
       setBiasScores(scoreArray);
+      setBiasPoles({ a: poleA.trim(), b: poleB.trim() });
       setColorMode('bias_gradient');
     } catch (err) {
       console.error('Bias probe failed:', err);
     } finally {
       setLoading(false);
     }
-  }, [embeddingService, poleA, poleB, setBiasScores, setColorMode]);
+  }, [embeddingService, poleA, poleB, setBiasScores, setBiasPoles, setColorMode]);
 
   const exportBias = useCallback(() => {
     if (!space || biasScores.length === 0) return;
@@ -57,37 +57,9 @@ export function BiasProbePanel() {
   const clear = useCallback(() => {
     setBiasScores([]);
     setBiasLinesEnabled(false);
-    setNeighborhood(null, []);
+    setBiasPoles(null);
     setColorMode('cluster');
-  }, [setBiasScores, setBiasLinesEnabled, setNeighborhood, setColorMode]);
-
-  // Auto-query neighbors when bias lines enabled + point selected
-  useEffect(() => {
-    if (!biasLinesEnabled || colorMode !== 'bias_gradient' || !selectedPoint || !space || !embeddingService) {
-      return;
-    }
-
-    const pointIndex = space.points.findIndex((p) => p.term === selectedPoint.term);
-    if (pointIndex < 0) return;
-
-    let cancelled = false;
-    embeddingService.neighbors(String(pointIndex), 10).then((neighbors) => {
-      if (!cancelled) {
-        setNeighborhood(pointIndex, neighbors.map((n) => n.index));
-      }
-    }).catch((err) => {
-      console.error('Bias neighbor query failed:', err);
-    });
-
-    return () => { cancelled = true; };
-  }, [biasLinesEnabled, colorMode, selectedPoint, space, embeddingService, setNeighborhood]);
-
-  // Clear neighbor lines when bias lines toggled off
-  useEffect(() => {
-    if (!biasLinesEnabled) {
-      setNeighborhood(null, []);
-    }
-  }, [biasLinesEnabled, setNeighborhood]);
+  }, [setBiasScores, setBiasLinesEnabled, setBiasPoles, setColorMode]);
 
   if (!embeddingService) return null;
 
@@ -142,7 +114,7 @@ export function BiasProbePanel() {
             onChange={(e) => setBiasLinesEnabled(e.target.checked)}
             className="accent-blue-400"
           />
-          <span className="text-xs text-white/60">Show neighbor links</span>
+          <span className="text-xs text-white/60">Show pole links</span>
         </label>
       )}
 
