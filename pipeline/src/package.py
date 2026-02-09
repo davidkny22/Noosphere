@@ -118,4 +118,12 @@ def package_space(
 
     size_kb = filepath.stat().st_size / 1024
     logger.info("Wrote space to %s (%.0f KB)", filepath, size_kb)
+
+    # Save vocab mapping: term -> embedding index (for later filtering/FAISS rebuilds)
+    vocab_path = output_dir / f"{embedding.model_name}-{num_k}k-vocab.json.gz"
+    vocab_map = {term: i for i, term in enumerate(embedding.terms)}
+    with gzip.open(vocab_path, "wt", encoding="utf-8") as f:
+        json.dump(vocab_map, f, separators=(",", ":"))
+    logger.info("Wrote vocab mapping to %s (%d terms)", vocab_path, len(vocab_map))
+
     return str(filepath)
