@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useSpaceStore } from '../store/useSpaceStore';
 
 export function BiasProbePanel() {
@@ -8,6 +8,10 @@ export function BiasProbePanel() {
   const colorMode = useSpaceStore((s) => s.colorMode);
   const space = useSpaceStore((s) => s.space);
   const biasScores = useSpaceStore((s) => s.biasScores);
+  const selectedPoint = useSpaceStore((s) => s.selectedPoint);
+  const biasLinesEnabled = useSpaceStore((s) => s.biasLinesEnabled);
+  const setBiasLinesEnabled = useSpaceStore((s) => s.setBiasLinesEnabled);
+  const setNeighborhood = useSpaceStore((s) => s.setNeighborhood);
 
   const [poleA, setPoleA] = useState('');
   const [poleB, setPoleB] = useState('');
@@ -52,8 +56,38 @@ export function BiasProbePanel() {
 
   const clear = useCallback(() => {
     setBiasScores([]);
+    setBiasLinesEnabled(false);
+    setNeighborhood(null, []);
     setColorMode('cluster');
-  }, [setBiasScores, setColorMode]);
+  }, [setBiasScores, setBiasLinesEnabled, setNeighborhood, setColorMode]);
+
+  // Auto-query neighbors when bias lines enabled + point selected
+  useEffect(() => {
+    if (!biasLinesEnabled || colorMode !== 'bias_gradient' || !selectedPoint || !space || !embeddingService) {
+      return;
+    }
+
+    const pointIndex = space.points.findIndex((p) => p.term === selectedPoint.term);
+    if (pointIndex < 0) return;
+
+    let cancelled = false;
+    embeddingService.neighbors(String(pointIndex), 10).then((neighbors) => {
+      if (!cancelled) {
+        setNeighborhood(pointIndex, neighbors.map((n) => n.index));
+      }
+    }).catch((err) => {
+      console.error('Bias neighbor query failed:', err);
+    });
+
+    return () => { cancelled = true; };
+  }, [biasLinesEnabled, colorMode, selectedPoint, space, embeddingService, setNeighborhood]);
+
+  // Clear neighbor lines when bias lines toggled off
+  useEffect(() => {
+    if (!biasLinesEnabled) {
+      setNeighborhood(null, []);
+    }
+  }, [biasLinesEnabled, setNeighborhood]);
 
   if (!embeddingService) return null;
 
@@ -99,6 +133,18 @@ export function BiasProbePanel() {
           </button>
         )}
       </div>
+
+      {colorMode === 'bias_gradient' && (
+        <label className="mt-3 flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={biasLinesEnabled}
+            onChange={(e) => setBiasLinesEnabled(e.target.checked)}
+            className="accent-blue-400"
+          />
+          <span className="text-xs text-white/60">Show neighbor links</span>
+        </label>
+      )}
 
       {biasScores.length > 0 && (
         <button
