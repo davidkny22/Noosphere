@@ -1,6 +1,15 @@
 import { create } from 'zustand';
 import type { SpaceManifest, PointData, ColorMode } from '../types/space';
-import type { EmbeddingService } from '../services/embeddingService';
+import type { EmbeddingService, Neighbor } from '../services/embeddingService';
+
+export interface AnalogyResultData {
+  a: string;
+  b: string;
+  c: string;
+  resultTerm: string;
+  coordsResult: [number, number, number];
+  neighbors: Neighbor[];
+}
 
 export interface UserEmbed {
   id: string;
@@ -54,6 +63,9 @@ interface SpaceState {
   // Bias
   biasScores: number[];
 
+  // Search history breadcrumbs
+  searchHistory: Array<{ query: string; pos: [number, number, number]; timestamp: number }>;
+
   // Intro animation
   introState: 'pending' | 'animating' | 'done';
 
@@ -61,6 +73,24 @@ interface SpaceState {
   userEmbeds: UserEmbed[];
   selectedUserEmbed: UserEmbed | null;
   hoveredUserEmbed: UserEmbed | null;
+
+  // Analogy
+  analogyResult: AnalogyResultData | null;
+
+  // Comparison
+  comparisonResult: {
+    textA: string;
+    textB: string;
+    similarity: number;
+    coordsA: [number, number, number];
+    coordsB: [number, number, number];
+  } | null;
+
+  // Precision
+  precisionMode: '3d' | 'hd';
+
+  // Control mode
+  controlMode: 'orbit' | 'fly';
 
   // Mode
   isAdvancedMode: boolean;
@@ -86,6 +116,12 @@ interface SpaceState {
   removeUserEmbed: (id: string) => void;
   selectUserEmbed: (embed: UserEmbed | null) => void;
   hoverUserEmbed: (embed: UserEmbed | null) => void;
+  setAnalogyResult: (result: AnalogyResultData | null) => void;
+  setComparisonResult: (result: SpaceState['comparisonResult']) => void;
+  setPrecisionMode: (mode: '3d' | 'hd') => void;
+  setControlMode: (mode: 'orbit' | 'fly') => void;
+  addSearchHistory: (entry: { query: string; pos: [number, number, number]; timestamp: number }) => void;
+  clearSearchHistory: () => void;
   setIntroState: (state: 'pending' | 'animating' | 'done') => void;
   toggleAdvancedMode: () => void;
 }
@@ -124,11 +160,21 @@ export const useSpaceStore = create<SpaceState>((set) => ({
 
   biasScores: [],
 
+  searchHistory: [],
+
   userEmbeds: loadUserEmbeds(DEFAULT_SPACE_URL),
   selectedUserEmbed: null,
   hoveredUserEmbed: null,
 
   introState: 'pending',
+
+  analogyResult: null,
+
+  comparisonResult: null,
+
+  precisionMode: '3d',
+
+  controlMode: 'orbit',
 
   isAdvancedMode: (typeof localStorage !== 'undefined' && localStorage.getItem('noosphere-advanced') === 'true') || false,
 
@@ -148,6 +194,7 @@ export const useSpaceStore = create<SpaceState>((set) => ({
     userEmbeds: loadUserEmbeds(url),
     selectedUserEmbed: null,
     hoveredUserEmbed: null,
+    searchHistory: [],
   }),
   setSpace: (space) => set({ space, loading: false, error: null, introState: 'animating' }),
   setLoading: (loading) => set({ loading }),
@@ -176,6 +223,14 @@ export const useSpaceStore = create<SpaceState>((set) => ({
   }),
   selectUserEmbed: (embed) => set({ selectedUserEmbed: embed, selectedPoint: null }),
   hoverUserEmbed: (embed) => set({ hoveredUserEmbed: embed }),
+  setAnalogyResult: (result) => set({ analogyResult: result }),
+  setComparisonResult: (result) => set({ comparisonResult: result }),
+  setPrecisionMode: (mode) => set({ precisionMode: mode }),
+  setControlMode: (mode) => set({ controlMode: mode }),
+  addSearchHistory: (entry) => set((s) => ({
+    searchHistory: [...s.searchHistory, entry],
+  })),
+  clearSearchHistory: () => set({ searchHistory: [] }),
   setIntroState: (state) => set({ introState: state }),
   toggleAdvancedMode: () => set((s) => {
     const next = !s.isAdvancedMode;

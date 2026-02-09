@@ -6,6 +6,8 @@ export function BiasProbePanel() {
   const setBiasScores = useSpaceStore((s) => s.setBiasScores);
   const setColorMode = useSpaceStore((s) => s.setColorMode);
   const colorMode = useSpaceStore((s) => s.colorMode);
+  const space = useSpaceStore((s) => s.space);
+  const biasScores = useSpaceStore((s) => s.biasScores);
 
   const [poleA, setPoleA] = useState('');
   const [poleB, setPoleB] = useState('');
@@ -29,6 +31,24 @@ export function BiasProbePanel() {
       setLoading(false);
     }
   }, [embeddingService, poleA, poleB, setBiasScores, setColorMode]);
+
+  const exportBias = useCallback(() => {
+    if (!space || biasScores.length === 0) return;
+
+    const rows = space.points.map((p, i) => {
+      const cluster = space.clusters.find(c => c.id === p.cluster);
+      return `"${p.term}",${biasScores[i]?.toFixed(4) ?? ''},"${cluster?.label ?? 'noise'}"`;
+    });
+
+    const csv = `term,score,cluster\n${rows.join('\n')}`;
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `bias-probe-${poleA}-vs-${poleB}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [space, biasScores, poleA, poleB]);
 
   const clear = useCallback(() => {
     setBiasScores([]);
@@ -79,6 +99,15 @@ export function BiasProbePanel() {
           </button>
         )}
       </div>
+
+      {biasScores.length > 0 && (
+        <button
+          onClick={exportBias}
+          className="w-full rounded bg-white/10 px-3 py-1.5 text-xs text-white/70 hover:bg-white/20 hover:text-white mt-2"
+        >
+          Export CSV
+        </button>
+      )}
 
       {colorMode === 'bias_gradient' && (
         <div className="mt-3 flex items-center justify-between text-xs">

@@ -6,14 +6,20 @@ import { PointLabel } from './PointLabel';
 import { ClusterLabels } from './ClusterLabels';
 import { CameraAnimator } from './CameraAnimator';
 import { ScrollZoom } from './ScrollZoom';
+import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import { NeighborLines } from './NeighborLines';
 import { ProjectedMarker } from './ProjectedMarker';
 import { UserEmbedPoints } from './UserEmbedPoints';
 import { IntroAnimation } from './IntroAnimation';
+import { ClusterFog } from './ClusterFog';
+import { ComparisonMarkers } from './ComparisonMarkers';
+import { AnalogyMarkers } from './AnalogyMarkers';
+import { Breadcrumbs } from './Breadcrumbs';
+import { FlyControls } from './FlyControls';
 import { useSpaceStore } from '../store/useSpaceStore';
 
 const FOG_COLOR = '#0a0a0a';
-const NUM_POINTS_FOG_THRESHOLD = 5000;
+const NUM_POINTS_FOG_THRESHOLD = 50000;
 
 export function SpaceCanvas() {
   const space = useSpaceStore((s) => s.space);
@@ -45,8 +51,8 @@ export function SpaceCanvas() {
     // multiplier: 1.0 for dense (>=5K), up to 2.0 for sparse (<5K)
     const multiplier = 2 - Math.min(n, NUM_POINTS_FOG_THRESHOLD) / NUM_POINTS_FOG_THRESHOLD;
     return {
-      fogNear: maxDist * 1.5,
-      fogFar: maxDist * 5 * multiplier,
+      fogNear: maxDist * 1.2,
+      fogFar: maxDist * 4 * multiplier,
     };
   }, [space]);
 
@@ -63,10 +69,14 @@ export function SpaceCanvas() {
         <ambientLight intensity={0.4} />
         <directionalLight position={[50, 50, 50]} intensity={0.6} />
         <directionalLight position={[-50, -30, -50]} intensity={0.3} />
+        <ClusterFog />
         <PointCloud />
         <UserEmbedPoints />
         <NeighborLines />
         <ProjectedMarker />
+        <ComparisonMarkers />
+        <AnalogyMarkers />
+        <Breadcrumbs />
         <PointLabel />
         <ClusterLabels />
         <CameraAnimator />
@@ -82,6 +92,15 @@ export function SpaceCanvas() {
         />
         <IntroAnimation />
         <ScrollZoom />
+        <FlyControls />
+        <EffectComposer>
+          <Bloom
+            luminanceThreshold={0.8}
+            luminanceSmoothing={0.3}
+            intensity={0.6}
+            radius={0.4}
+          />
+        </EffectComposer>
         {showStats && <Stats />}
       </Canvas>
     </div>

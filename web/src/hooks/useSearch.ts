@@ -46,7 +46,7 @@ export function useSearch(space: SpaceManifest | null) {
       if (!query.trim() || !space || !fuse) return [];
 
       const clusterMatches = searchClusters(query, space.clusters);
-      const termResults = fuse.search(query, { limit: 10 });
+      const termResults = fuse.search(query, { limit: 20 });
       const termMatches: TermMatch[] = termResults.map((r) => ({
         type: 'term',
         term: r.item.term,
