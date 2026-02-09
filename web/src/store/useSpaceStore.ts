@@ -129,8 +129,9 @@ interface SpaceState {
 const DEFAULT_SPACE_URL = '/spaces/minilm-10k.json.gz';
 
 export const AVAILABLE_SPACES = [
-  { id: 'minilm', label: 'MiniLM (384d)', url: '/spaces/minilm-10k.json.gz' },
-  { id: 'qwen3', label: 'Qwen3 (1024d)', url: '/spaces/qwen3-10k.json.gz' },
+  { id: 'minilm-10k', label: 'MiniLM 10K (384d)', url: '/spaces/minilm-10k.json.gz' },
+  { id: 'minilm-250k', label: 'MiniLM 250K (384d)', url: '/spaces/minilm-250k.json.gz' },
+  { id: 'qwen3-10k', label: 'Qwen3 10K (1024d)', url: '/spaces/qwen3-10k.json.gz' },
 ];
 
 export const useSpaceStore = create<SpaceState>((set) => ({
