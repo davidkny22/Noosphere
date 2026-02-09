@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from pathlib import Path
 
 from .types import VocabularyResult
@@ -31,15 +32,28 @@ STOPWORDS = {
 
 DEFAULT_CONFIG = "vocab_config.json"
 
+# Patterns that indicate noise rather than meaningful terms
+_NOISE_PATTERNS = [
+    re.compile(r"^\d{4}-\d{2}-\d{2}"),        # dates (YYYY-MM-DD)
+    re.compile(r"^[\d,.\s]+$"),                 # pure numbers (65.40, 90,564)
+    re.compile(r"^\d+\s*(to|through)\s*\d+$"),  # numeric ranges (5 to 12)
+    re.compile(r"^\d+\s*nautical\s*mile"),       # nautical miles
+    re.compile(r"^\d+[a-z]$"),                   # item IDs (26a, 15c)
+]
+
 
 def filter_term(term: str) -> bool:
     if len(term) < 2:
+        return False
+    if len(term) > 80:
         return False
     if term.isnumeric():
         return False
     if term in STOPWORDS:
         return False
     if not term.isascii():
+        return False
+    if any(p.match(term) for p in _NOISE_PATTERNS):
         return False
     return True
 

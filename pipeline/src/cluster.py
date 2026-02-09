@@ -18,9 +18,9 @@ def generate_cluster_label(representative_terms: list[str], client: OpenAI | Non
 
     try:
         response = client.responses.create(
-            model="5-nano",
+            model="gpt-5-nano",
             reasoning={"effort": "medium"},
-            input=f"Create a concise 1-3 word category label for this group of related concepts: {', '.join(representative_terms[:10])}. Reply with ONLY the label, nothing else.",
+            input=f"Create a concise 1-3 word category label for a 3D visualization cluster containing these related terms: {', '.join(representative_terms[:10])}. Reply with ONLY the label, nothing else.",
         )
         label = response.output_text.strip()
         if label:
