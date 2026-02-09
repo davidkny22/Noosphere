@@ -1,5 +1,5 @@
 import { useRef, useEffect, useMemo } from 'react';
-import { useThree } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useSpaceStore } from '../store/useSpaceStore';
 import { computeColors, buildClusterPalette } from '../systems/colorSystem';
@@ -62,7 +62,9 @@ export function PointCloud() {
   const neighborCenter = useSpaceStore((s) => s.neighborCenter);
   const biasScores = useSpaceStore((s) => s.biasScores);
   const introState = useSpaceStore((s) => s.introState);
+  const pulseIndex = useSpaceStore((s) => s.pulseIndex);
   const { raycaster } = useThree();
+  const pulseTime = useRef(0);
 
   const palette = useMemo(() => {
     if (!space) return new Map<number, [number, number, number]>();
@@ -134,15 +136,49 @@ export function PointCloud() {
     raycaster.params.Points = { threshold: 0.5 };
   }, [raycaster]);
 
-  // Handle hover (gated during intro animation)
+  // Reset pulse timer when a new pulse starts
+  useEffect(() => {
+    if (pulseIndex != null) pulseTime.current = 0;
+  }, [pulseIndex]);
+
+  // Animate pulsing point scale
+  const PULSE_DURATION = 4.0;
+  const PULSE_SPEED = 5.0;
+  useFrame((_, delta) => {
+    if (pulseIndex == null || !geometry) return;
+    pulseTime.current += delta;
+
+    if (pulseTime.current > PULSE_DURATION) {
+      // Stop pulsing — reset scale to normal
+      const scaleAttr = geometry.getAttribute('scaleFactor') as THREE.BufferAttribute;
+      (scaleAttr.array as Float32Array)[pulseIndex] = 1.0;
+      scaleAttr.needsUpdate = true;
+      useSpaceStore.getState().setPulseIndex(null);
+      return;
+    }
+
+    // Sine wave pulse: scale between 1.0 and 4.0
+    const wave = Math.sin(pulseTime.current * PULSE_SPEED);
+    const scale = 2.5 + 1.5 * wave;
+
+    const scaleAttr = geometry.getAttribute('scaleFactor') as THREE.BufferAttribute;
+    (scaleAttr.array as Float32Array)[pulseIndex] = scale;
+    scaleAttr.needsUpdate = true;
+  });
+
+  // Handle hover — re-raycast and sort by distanceToRay for accuracy
   const handlePointerOver = (e: THREE.Intersection & { stopPropagation: () => void }) => {
-    if (introState !== 'done') return;
-    const index = (e as unknown as { index?: number }).index;
-    if (index == null || !space) return;
+    if (introState !== 'done' || !pointsRef.current) return;
     e.stopPropagation();
-    const point = space.points[index];
+    // Re-raycast to get all hits, sort by aim accuracy
+    const hits = raycaster.intersectObject(pointsRef.current);
+    if (hits.length === 0) return;
+    hits.sort((a, b) => (a.distanceToRay ?? Infinity) - (b.distanceToRay ?? Infinity));
+    const idx = hits[0].index;
+    if (idx == null || !space) return;
+    const point = space.points[idx];
     if (point) {
-      useSpaceStore.getState().hoverPoint(point, index);
+      useSpaceStore.getState().hoverPoint(point, idx);
       document.body.style.cursor = 'pointer';
     }
   };
@@ -152,13 +188,16 @@ export function PointCloud() {
     document.body.style.cursor = 'auto';
   };
 
-  // Handle click (gated during intro animation)
+  // Handle click — re-raycast and sort by distanceToRay for accuracy
   const handleClick = (e: THREE.Intersection & { stopPropagation: () => void }) => {
-    if (introState !== 'done') return;
-    const index = (e as unknown as { index?: number }).index;
-    if (index == null || !space) return;
+    if (introState !== 'done' || !pointsRef.current) return;
     e.stopPropagation();
-    const point = space.points[index];
+    const hits = raycaster.intersectObject(pointsRef.current);
+    if (hits.length === 0) return;
+    hits.sort((a, b) => (a.distanceToRay ?? Infinity) - (b.distanceToRay ?? Infinity));
+    const idx = hits[0].index;
+    if (idx == null || !space) return;
+    const point = space.points[idx];
     if (point) {
       useSpaceStore.getState().selectPoint(point);
     }
@@ -199,6 +238,7 @@ export function PointCloud() {
     <points
       ref={pointsRef}
       geometry={geometry}
+      frustumCulled={false}
       onClick={handleClick}
       onPointerOver={handlePointerOver}
       onPointerOut={handlePointerOut}

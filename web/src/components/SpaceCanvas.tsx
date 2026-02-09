@@ -24,6 +24,7 @@ const NUM_POINTS_FOG_THRESHOLD = 50000;
 export function SpaceCanvas() {
   const space = useSpaceStore((s) => s.space);
   const spaceScale = useSpaceStore((s) => s.spaceScale);
+  const controlMode = useSpaceStore((s) => s.controlMode);
   const [showStats, setShowStats] = useState(false);
 
   useEffect(() => {
@@ -55,7 +56,7 @@ export function SpaceCanvas() {
     const isLarge = n > 50000;
     return {
       fogNear: isLarge ? maxDist * 0.3 : maxDist * 1.2,
-      fogFar: isLarge ? maxDist * 1.5 : maxDist * 4 * multiplier,
+      fogFar: isLarge ? maxDist * 3.0 : maxDist * 4 * multiplier,
     };
   }, [space]);
 
@@ -87,6 +88,7 @@ export function SpaceCanvas() {
         <CameraAnimator />
         <OrbitControls
           makeDefault
+          enabled={controlMode === 'orbit'}
           enableDamping
           dampingFactor={0.05}
           rotateSpeed={0.6}

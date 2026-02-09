@@ -95,6 +95,9 @@ interface SpaceState {
   // Space scale
   spaceScale: number;
 
+  // Pulse effect on teleport target
+  pulseIndex: number | null;
+
   // Mode
   isAdvancedMode: boolean;
 
@@ -123,6 +126,7 @@ interface SpaceState {
   setComparisonResult: (result: SpaceState['comparisonResult']) => void;
   setPrecisionMode: (mode: '3d' | 'hd') => void;
   setControlMode: (mode: 'orbit' | 'fly') => void;
+  setPulseIndex: (index: number | null) => void;
   cycleSpaceScale: () => void;
   addSearchHistory: (entry: { query: string; pos: [number, number, number]; timestamp: number }) => void;
   clearSearchHistory: () => void;
@@ -181,6 +185,7 @@ export const useSpaceStore = create<SpaceState>((set) => ({
 
   controlMode: 'orbit',
   spaceScale: 1,
+  pulseIndex: null,
 
   isAdvancedMode: (typeof localStorage !== 'undefined' && localStorage.getItem('noosphere-advanced') === 'true') || false,
 
@@ -233,6 +238,7 @@ export const useSpaceStore = create<SpaceState>((set) => ({
   setComparisonResult: (result) => set({ comparisonResult: result }),
   setPrecisionMode: (mode) => set({ precisionMode: mode }),
   setControlMode: (mode) => set({ controlMode: mode }),
+  setPulseIndex: (index) => set({ pulseIndex: index }),
   cycleSpaceScale: () => set((s) => {
     const scales = [1, 2, 3];
     const next = scales[(scales.indexOf(s.spaceScale) + 1) % scales.length]!;

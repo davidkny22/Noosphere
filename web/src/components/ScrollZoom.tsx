@@ -2,6 +2,8 @@ import { useEffect } from 'react';
 import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 
+import { useSpaceStore } from '../store/useSpaceStore';
+
 const ZOOM_SPEED = 5.0;
 const MIN_DISTANCE = 3;
 const MAX_DISTANCE = 300;
@@ -26,9 +28,11 @@ export function ScrollZoom() {
       const move = direction.multiplyScalar(delta);
 
       // Block zoom if camera would exceed distance bounds from origin
+      // In fly mode, no max distance cap
       const newPos = camera.position.clone().add(move);
+      const isFly = useSpaceStore.getState().controlMode === 'fly';
       if (delta > 0 && newPos.length() < MIN_DISTANCE) return;
-      if (delta < 0 && newPos.length() > MAX_DISTANCE) return;
+      if (!isFly && delta < 0 && newPos.length() > MAX_DISTANCE) return;
 
       camera.position.add(move);
 

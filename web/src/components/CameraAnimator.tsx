@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { useSpaceStore } from '../store/useSpaceStore';
 import { easeOutCubic, clamp } from '../utils/math';
 
-const OFFSET_DISTANCE = 15;
+const OFFSET_DISTANCE = 5;
 const SETTLE_FRAMES = 10;
 const AUTO_ROTATE_SPEED = 1.0;
 
@@ -27,6 +27,7 @@ export function CameraAnimator() {
   const flyToTarget = useSpaceStore((s) => s.flyToTarget);
   const flyToState = useSpaceStore((s) => s.flyToState);
   const space = useSpaceStore((s) => s.space);
+  const spaceScale = useSpaceStore((s) => s.spaceScale);
 
   // Enable auto-orbit when a new space loads
   useEffect(() => {
@@ -88,7 +89,9 @@ export function CameraAnimator() {
       orbitControls.autoRotate = false;
     }
 
-    const destination = new THREE.Vector3(...flyToTarget);
+    // flyToTarget is in data-space; multiply by spaceScale for world-space
+    const s = useSpaceStore.getState().spaceScale;
+    const destination = new THREE.Vector3(...flyToTarget).multiplyScalar(s);
     const currentPos = camera.position.clone();
 
     const direction = currentPos.clone().sub(destination).normalize();
@@ -156,7 +159,27 @@ export function CameraAnimator() {
       anim.settleCount++;
       if (anim.settleCount >= SETTLE_FRAMES) {
         animRef.current = null;
-        useSpaceStore.getState().setFlyToState('idle');
+        const store = useSpaceStore.getState();
+        store.setFlyToState('idle');
+
+        // Auto-select the nearest point to the fly target
+        if (store.flyToTarget && store.space) {
+          const [tx, ty, tz] = store.flyToTarget;
+          let bestIdx = -1;
+          let bestDist = Infinity;
+          for (let i = 0; i < store.space.points.length; i++) {
+            const [px, py, pz] = store.space.points[i]!.pos;
+            const d = (px - tx) ** 2 + (py - ty) ** 2 + (pz - tz) ** 2;
+            if (d < bestDist) {
+              bestDist = d;
+              bestIdx = i;
+            }
+          }
+          if (bestIdx >= 0 && bestDist < 4) {
+            store.selectPoint(store.space.points[bestIdx]!);
+            store.setPulseIndex(bestIdx);
+          }
+        }
       }
     }
   });
