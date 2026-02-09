@@ -31,15 +31,29 @@ class SpaceEngine:
         self,
         space_dir: str | Path,
         model_name: str = "qwen3",
+        space_prefix: str | None = None,
     ):
         space_dir = Path(space_dir)
         self.model_name = model_name
 
         # Discover artifact prefix (e.g., "qwen3-10k")
-        faiss_files = list(space_dir.glob(f"{model_name}-*.faiss"))
-        if not faiss_files:
-            raise FileNotFoundError(f"No FAISS index found for {model_name} in {space_dir}")
-        prefix = faiss_files[0].stem  # e.g., "qwen3-10k"
+        if space_prefix:
+            # Explicit prefix — deterministic
+            prefix = space_prefix
+            faiss_path = space_dir / f"{prefix}.faiss"
+            if not faiss_path.exists():
+                raise FileNotFoundError(f"FAISS index not found: {faiss_path}")
+        else:
+            # Legacy glob discovery — picks first match (non-deterministic)
+            faiss_files = list(space_dir.glob(f"{model_name}-*.faiss"))
+            if not faiss_files:
+                raise FileNotFoundError(f"No FAISS index found for {model_name} in {space_dir}")
+            prefix = faiss_files[0].stem
+            logger.warning(
+                "No explicit space prefix — glob matched %d files, using '%s'. "
+                "Set NOOSPHERE_SPACE_PREFIX for deterministic behavior.",
+                len(faiss_files), prefix,
+            )
         self._prefix = prefix
 
         # Load space JSON for term list
@@ -63,6 +77,13 @@ class SpaceEngine:
         # Load FAISS index
         self.faiss_index = faiss.read_index(str(faiss_files[0]))
         logger.info("FAISS index: %d vectors", self.faiss_index.ntotal)
+
+        if self.faiss_index.ntotal != self.num_points:
+            raise ValueError(
+                f"FAISS/space mismatch: FAISS has {self.faiss_index.ntotal} vectors "
+                f"but space has {self.num_points} points. "
+                f"Rebuild FAISS for {prefix} to fix."
+            )
 
         # Load HD embeddings
         emb_bin = space_dir / f"{prefix}-embeddings.bin"

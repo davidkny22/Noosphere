@@ -81,7 +81,7 @@ def main(space: str, embeddings_cache: str, output: str | None):
     vocab = assemble_vocabulary(target_size=all_embeddings.shape[0], data_dir=Path("data"))
     term_to_idx = {t: i for i, t in enumerate(vocab.terms)}
 
-    # Extract embeddings for space terms
+    # Extract embeddings for space terms — strict mode, no missing allowed
     indices = []
     missing = []
     for term in terms:
@@ -92,7 +92,13 @@ def main(space: str, embeddings_cache: str, output: str | None):
             missing.append(term)
 
     if missing:
-        logger.warning("%d terms not found in embeddings (first 5: %s)", len(missing), missing[:5])
+        logger.error(
+            "%d terms not found in embeddings! First 10: %s\n"
+            "This means vocab reconstruction doesn't match the original build.\n"
+            "FAISS index would be misaligned — aborting.",
+            len(missing), missing[:10],
+        )
+        sys.exit(1)
 
     space_embeddings = all_embeddings[indices].astype(np.float32)
     logger.info("  Extracted %d embeddings", len(space_embeddings))

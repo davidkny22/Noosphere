@@ -228,18 +228,23 @@ def _rebuild_faiss(
     vocab = assemble_vocabulary(target_size=all_embeddings.shape[0], data_dir=Path("data"))
     term_to_emb_idx = {t: i for i, t in enumerate(vocab.terms)}
 
-    # Extract filtered embeddings
+    # Extract filtered embeddings — strict mode, no missing allowed
     indices = []
-    missing = 0
+    missing = []
     for p in filtered_points:
         idx = term_to_emb_idx.get(p["term"])
         if idx is not None:
             indices.append(idx)
         else:
-            missing += 1
+            missing.append(p["term"])
 
-    if missing > 0:
-        logger.warning("%d terms not found in embedding cache — FAISS will have gaps", missing)
+    if missing:
+        logger.error(
+            "%d terms not found in embedding cache! First 10: %s\n"
+            "Vocab reconstruction doesn't match the original build — aborting.",
+            len(missing), missing[:10],
+        )
+        sys.exit(1)
 
     filtered_emb = all_embeddings[indices].astype(np.float32)
     logger.info("  Filtered embeddings: %s", filtered_emb.shape)
@@ -289,6 +294,27 @@ with open(sys.argv[4], "w") as f:
     status = json.loads(Path(status_path).read_text())
     os.unlink(status_path)
     logger.info("FAISS index: %d vectors, saved to %s", status["ntotal"], faiss_path)
+
+    # Also export HD embeddings .bin/.json for local browser service
+    prefix = Path(output_path).name.replace(".json.gz", "")
+    bin_path = Path(output_path).parent / f"{prefix}-embeddings.bin"
+    meta_path = Path(output_path).parent / f"{prefix}-embeddings.json"
+
+    filtered_emb.tofile(str(bin_path))
+    size_mb = bin_path.stat().st_size / (1024 * 1024)
+    logger.info("HD embeddings: %s (%.0f MB)", bin_path, size_mb)
+
+    import json as json_mod
+    meta_path.write_text(json_mod.dumps({
+        "model": original_data["model"],
+        "model_full": original_data.get("model_full", original_data["model"]),
+        "num_points": len(filtered_points),
+        "embedding_dim": dim,
+        "dtype": "float32",
+        "byte_order": "little",
+        "file": f"{prefix}-embeddings.bin",
+    }, indent=2))
+    logger.info("HD embeddings meta: %s", meta_path)
 
 
 if __name__ == "__main__":

@@ -27,9 +27,10 @@ async def lifespan(app: FastAPI):
         str(Path(__file__).parent.parent.parent / "web" / "public" / "spaces"),
     )
     model_name = os.environ.get("NOOSPHERE_MODEL", "minilm")
+    space_prefix = os.environ.get("NOOSPHERE_SPACE_PREFIX")  # e.g., "minilm-250k"
 
-    logger.info("Loading SpaceEngine: model=%s, space_dir=%s", model_name, space_dir)
-    app.state.engine = SpaceEngine(space_dir=space_dir, model_name=model_name)
+    logger.info("Loading SpaceEngine: model=%s, prefix=%s, space_dir=%s", model_name, space_prefix, space_dir)
+    app.state.engine = SpaceEngine(space_dir=space_dir, model_name=model_name, space_prefix=space_prefix)
     logger.info("SpaceEngine ready — %d points loaded", app.state.engine.num_points)
     yield
 
