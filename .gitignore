@@ -9,6 +9,13 @@ dist/
 # Pipeline cache
 pipeline/data/cache/
 
+# Generated vocab sources (regenerated via scripts/fetch_vocab_sources.py)
+pipeline/data/sources/conceptnet.txt
+pipeline/data/sources/wordnet.txt
+pipeline/data/sources/mesh.txt
+pipeline/data/sources/wikipedia_titles.txt
+pipeline/data/sources/dariusk_corpora.txt
+
 # Node
 node_modules/
 web/dist/

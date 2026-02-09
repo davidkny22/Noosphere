@@ -1,0 +1,54 @@
+{
+  "target_size": 250000,
+  "sources": [
+    {
+      "key": "google_20k",
+      "file": "google_20k.txt",
+      "priority": 100,
+      "quota": 18000,
+      "note": "High-frequency English words. Highest priority — common words 'belong' here."
+    },
+    {
+      "key": "curated",
+      "file": "curated_concepts.txt",
+      "priority": 95,
+      "quota": 1000,
+      "note": "Hand-picked domain concepts. High priority — intentionally chosen."
+    },
+    {
+      "key": "conceptnet",
+      "file": "conceptnet.txt",
+      "priority": 80,
+      "quota": 130000,
+      "note": "Commonsense concepts ranked by edge count. Core of the space."
+    },
+    {
+      "key": "wordnet",
+      "file": "wordnet.txt",
+      "priority": 70,
+      "quota": 40000,
+      "note": "Curated lexical coverage. Fills formal vocabulary gaps."
+    },
+    {
+      "key": "mesh",
+      "file": "mesh.txt",
+      "priority": 60,
+      "quota": 35000,
+      "note": "Medical/scientific terms. Domain coverage."
+    },
+    {
+      "key": "wikipedia_titles",
+      "file": "wikipedia_titles.txt",
+      "priority": 50,
+      "quota": 20000,
+      "note": "Named compound concepts. Gap-filler."
+    },
+    {
+      "key": "dariusk_corpora",
+      "file": "dariusk_corpora.txt",
+      "priority": 40,
+      "quota": 6000,
+      "note": "Curated domain concept lists. Polish."
+    }
+  ]
+}
