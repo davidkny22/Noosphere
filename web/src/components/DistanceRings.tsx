@@ -2,7 +2,7 @@ import { useSpaceStore } from '../store/useSpaceStore';
 
 const RINGS = [
   { radius: 5, color: '#22c55e', label: 'Close neighbors' },   // green
-  { radius: 20, color: '#f59e0b', label: 'Related' },           // amber
+  { radius: 15, color: '#f59e0b', label: 'Related' },           // amber
 ] as const;
 
 export function DistanceRings() {
