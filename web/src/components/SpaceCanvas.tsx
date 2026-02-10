@@ -18,6 +18,7 @@ import { AnalogyMarkers } from './AnalogyMarkers';
 import { Breadcrumbs } from './Breadcrumbs';
 import { FlyControls } from './FlyControls';
 import { DistanceLegendUpdater } from './DistanceLegend';
+import { DistanceRings } from './DistanceRings';
 import { useSpaceStore } from '../store/useSpaceStore';
 
 const FOG_COLOR = '#0a0a0a';
@@ -85,6 +86,7 @@ export function SpaceCanvas() {
           <ComparisonMarkers />
           <AnalogyMarkers />
           <Breadcrumbs />
+          <DistanceRings />
           <PointLabel />
           <ClusterLabels />
         </group>

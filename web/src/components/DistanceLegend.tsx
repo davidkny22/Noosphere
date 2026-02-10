@@ -52,8 +52,9 @@ function formatDistance(d: number): string {
 export function DistanceLegend() {
   const barDistance = useSpaceStore((s) => s.scaleBarDistance);
   const space = useSpaceStore((s) => s.space);
+  const isAdvancedMode = useSpaceStore((s) => s.isAdvancedMode);
 
-  if (!space || barDistance === 0) return null;
+  if (!space || barDistance === 0 || !isAdvancedMode) return null;
 
   const label = getLabel(barDistance);
 

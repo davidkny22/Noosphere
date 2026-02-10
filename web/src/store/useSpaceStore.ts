@@ -198,6 +198,7 @@ export const useSpaceStore = create<SpaceState>((set) => ({
 
   isAdvancedMode: (typeof localStorage !== 'undefined' && localStorage.getItem('noosphere-advanced') === 'true') || false,
 
+
   setSpaceUrl: (url) => set({
     spaceUrl: url,
     space: null,
