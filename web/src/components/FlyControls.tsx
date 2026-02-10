@@ -9,7 +9,7 @@ const LOOK_SPEED = 0.003;
 export function FlyControls() {
   const controlMode = useSpaceStore((s) => s.controlMode);
   const { camera, gl } = useThree();
-  const keys = useRef({ w: false, s: false, a: false, d: false, q: false, e: false });
+  const keys = useRef({ w: false, s: false, a: false, d: false, q: false, e: false, shift: false });
   const mouse = useRef({ isDown: false, prevX: 0, prevY: 0 });
   const euler = useRef(new THREE.Euler(0, 0, 0, 'YXZ'));
 
@@ -21,11 +21,13 @@ export function FlyControls() {
     };
     const onKeyDown = (e: KeyboardEvent) => {
       if (isTyping(e)) return;
+      if (e.key === 'Shift') { keys.current.shift = true; return; }
       const k = e.key.toLowerCase();
       if (k in keys.current) (keys.current as any)[k] = true;
     };
     const onKeyUp = (e: KeyboardEvent) => {
       if (isTyping(e)) return;
+      if (e.key === 'Shift') { keys.current.shift = false; return; }
       const k = e.key.toLowerCase();
       if (k in keys.current) (keys.current as any)[k] = false;
     };
@@ -73,7 +75,7 @@ export function FlyControls() {
 
   useFrame((_, delta) => {
     if (controlMode !== 'fly') return;
-    const speed = MOVE_SPEED * delta;
+    const speed = MOVE_SPEED * delta * (keys.current.shift ? 2 : 1);
     if (keys.current.w) camera.translateZ(-speed);
     if (keys.current.s) camera.translateZ(speed);
     if (keys.current.a) camera.translateX(-speed);
