@@ -45,9 +45,17 @@ varying vec3 vColor;
 
 void main() {
   vec2 center = gl_PointCoord - vec2(0.5);
-  if (dot(center, center) > 0.25) discard;
+  float r2 = dot(center, center);
+  if (r2 > 0.25) discard;
 
-  gl_FragColor = vec4(vColor, 1.0);
+  // Fake sphere shading: darken edges, brighten center
+  float r = sqrt(r2) * 2.0; // 0 at center, 1 at edge
+  float diffuse = 1.0 - r * 0.5; // gentle edge darkening
+  // Specular highlight offset toward top-left
+  float spec = max(0.0, 1.0 - length(center - vec2(-0.12, -0.12)) * 5.0);
+
+  vec3 shaded = vColor * diffuse + vec3(1.0) * spec * 0.3;
+  gl_FragColor = vec4(shaded, 1.0);
 
   #include <fog_fragment>
 }
