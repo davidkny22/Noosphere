@@ -14,11 +14,18 @@ export function FlyControls() {
   const euler = useRef(new THREE.Euler(0, 0, 0, 'YXZ'));
 
   useEffect(() => {
+    const isTyping = (e: KeyboardEvent) => {
+      const el = e.target as HTMLElement;
+      const tag = el.tagName;
+      return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || el.isContentEditable;
+    };
     const onKeyDown = (e: KeyboardEvent) => {
+      if (isTyping(e)) return;
       const k = e.key.toLowerCase();
       if (k in keys.current) (keys.current as any)[k] = true;
     };
     const onKeyUp = (e: KeyboardEvent) => {
+      if (isTyping(e)) return;
       const k = e.key.toLowerCase();
       if (k in keys.current) (keys.current as any)[k] = false;
     };
