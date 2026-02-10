@@ -17,25 +17,31 @@ export function ComparisonPanel() {
     setLoading(true);
     try {
       const result = await embeddingService.compare(textA.trim(), textB.trim());
-      const coordsA = result.coordsA;
-      const coordsB = result.coordsB;
-
-      // Create userEmbeds for novel terms (not found in space or existing userEmbeds)
       const store = useSpaceStore.getState();
-      const existingLabels = new Set(store.userEmbeds.map((e) => e.label.toLowerCase()));
-      if (result.indexA === null && !existingLabels.has(textA.trim().toLowerCase())) {
+
+      // Use existing userEmbed positions if available, otherwise use server coords
+      const findUserEmbed = (label: string) =>
+        store.userEmbeds.find((e) => e.label.toLowerCase() === label.toLowerCase());
+
+      const existingA = findUserEmbed(textA.trim());
+      const existingB = findUserEmbed(textB.trim());
+      const coordsA = existingA ? existingA.pos : result.coordsA;
+      const coordsB = existingB ? existingB.pos : result.coordsB;
+
+      // Create userEmbeds for novel terms (not in space AND not an existing userEmbed)
+      if (result.indexA === null && !existingA) {
         store.addUserEmbed({
           id: crypto.randomUUID(),
           label: textA.trim(),
-          pos: coordsA,
+          pos: result.coordsA,
           createdAt: Date.now(),
         });
       }
-      if (result.indexB === null && !existingLabels.has(textB.trim().toLowerCase())) {
+      if (result.indexB === null && !existingB) {
         store.addUserEmbed({
           id: crypto.randomUUID(),
           label: textB.trim(),
-          pos: coordsB,
+          pos: result.coordsB,
           createdAt: Date.now(),
         });
       }
