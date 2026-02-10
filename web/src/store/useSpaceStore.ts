@@ -88,9 +88,6 @@ interface SpaceState {
     coordsB: [number, number, number];
   } | null;
 
-  // Precision
-  precisionMode: '3d' | 'hd';
-
   // Control mode
   controlMode: 'orbit' | 'fly';
 
@@ -129,7 +126,6 @@ interface SpaceState {
   hoverUserEmbed: (embed: UserEmbed | null) => void;
   setAnalogyResult: (result: AnalogyResultData | null) => void;
   setComparisonResult: (result: SpaceState['comparisonResult']) => void;
-  setPrecisionMode: (mode: '3d' | 'hd') => void;
   setControlMode: (mode: 'orbit' | 'fly') => void;
   setPulseIndex: (index: number | null) => void;
   cycleSpaceScale: () => void;
@@ -189,9 +185,8 @@ export const useSpaceStore = create<SpaceState>((set) => ({
 
   comparisonResult: null,
 
-  precisionMode: '3d',
 
-  controlMode: 'orbit',
+  controlMode: 'fly',
   spaceScale: 1,
   scaleBarDistance: 0,
   pulseIndex: null,
@@ -249,7 +244,6 @@ export const useSpaceStore = create<SpaceState>((set) => ({
   hoverUserEmbed: (embed) => set({ hoveredUserEmbed: embed }),
   setAnalogyResult: (result) => set({ analogyResult: result }),
   setComparisonResult: (result) => set({ comparisonResult: result }),
-  setPrecisionMode: (mode) => set({ precisionMode: mode }),
   setControlMode: (mode) => set({ controlMode: mode }),
   setPulseIndex: (index) => set({ pulseIndex: index }),
   cycleSpaceScale: () => set((s) => {

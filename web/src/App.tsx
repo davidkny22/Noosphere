@@ -7,7 +7,6 @@ import { SpaceSelector } from './components/SpaceSelector';
 import { BiasProbePanel } from './components/BiasProbePanel';
 import { ComparisonPanel } from './components/ComparisonPanel';
 import { AnalogyPanel } from './components/AnalogyPanel';
-import { PrecisionToggle } from './components/PrecisionToggle';
 import { ControlModeToggle } from './components/ControlModeToggle';
 import { SpaceScaleToggle } from './components/SpaceScaleToggle';
 import { ModeToggle } from './components/ModeToggle';
@@ -33,7 +32,6 @@ function App() {
           <AnalogyPanel />
         </div>
       )}
-      <PrecisionToggle />
       <SpaceScaleToggle />
       <ControlModeToggle />
       <ModeToggle />

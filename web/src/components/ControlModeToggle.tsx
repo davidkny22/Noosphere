@@ -3,9 +3,8 @@ import { useSpaceStore } from '../store/useSpaceStore';
 export function ControlModeToggle() {
   const controlMode = useSpaceStore((s) => s.controlMode);
   const setControlMode = useSpaceStore((s) => s.setControlMode);
-  const isAdvancedMode = useSpaceStore((s) => s.isAdvancedMode);
 
-  if (!isAdvancedMode) return null;
+  // Available in all modes (beginner + advanced)
 
   return (
     <button
