@@ -20,9 +20,10 @@ export function ComparisonPanel() {
       const coordsA = result.coordsA;
       const coordsB = result.coordsB;
 
-      // Create userEmbeds for novel terms (not found in space)
+      // Create userEmbeds for novel terms (not found in space or existing userEmbeds)
       const store = useSpaceStore.getState();
-      if (result.indexA === null) {
+      const existingLabels = new Set(store.userEmbeds.map((e) => e.label.toLowerCase()));
+      if (result.indexA === null && !existingLabels.has(textA.trim().toLowerCase())) {
         store.addUserEmbed({
           id: crypto.randomUUID(),
           label: textA.trim(),
@@ -30,7 +31,7 @@ export function ComparisonPanel() {
           createdAt: Date.now(),
         });
       }
-      if (result.indexB === null) {
+      if (result.indexB === null && !existingLabels.has(textB.trim().toLowerCase())) {
         store.addUserEmbed({
           id: crypto.randomUUID(),
           label: textB.trim(),
