@@ -61,7 +61,7 @@ export function PointCloud() {
   const neighborIndices = useSpaceStore((s) => s.neighborIndices);
   const neighborCenter = useSpaceStore((s) => s.neighborCenter);
   const biasScores = useSpaceStore((s) => s.biasScores);
-  const introState = useSpaceStore((s) => s.introState);
+  // const introState = useSpaceStore((s) => s.introState);
   const pulseIndex = useSpaceStore((s) => s.pulseIndex);
   const { raycaster } = useThree();
   const pulseTime = useRef(0);
@@ -168,7 +168,8 @@ export function PointCloud() {
 
   // Handle hover — re-raycast and sort by distanceToRay for accuracy
   const handlePointerOver = (e: THREE.Intersection & { stopPropagation: () => void }) => {
-    if (introState !== 'done' || !pointsRef.current) return;
+    // if (introState !== 'done' || !pointsRef.current) return;
+    if (!pointsRef.current) return;
     e.stopPropagation();
     // Re-raycast to get all hits, sort by aim accuracy
     const hits = raycaster.intersectObject(pointsRef.current);
@@ -190,7 +191,8 @@ export function PointCloud() {
 
   // Handle click — re-raycast and sort by distanceToRay for accuracy
   const handleClick = (e: THREE.Intersection & { stopPropagation: () => void }) => {
-    if (introState !== 'done' || !pointsRef.current) return;
+    // if (introState !== 'done' || !pointsRef.current) return;
+    if (!pointsRef.current) return;
     e.stopPropagation();
     const hits = raycaster.intersectObject(pointsRef.current);
     if (hits.length === 0) return;

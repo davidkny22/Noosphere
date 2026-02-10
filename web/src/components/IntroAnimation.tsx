@@ -18,33 +18,60 @@ export function IntroAnimation() {
   const { scene } = useThree();
   const timeRef = useRef(0);
   const targetPositions = useRef<Float32Array | null>(null);
+  const rafRef = useRef<number | null>(null);
+
+  // Safety timeout: if animation doesn't complete within 4s, force 'done'
+  useEffect(() => {
+    if (introState !== 'animating') return;
+    const timeout = setTimeout(() => {
+      if (useSpaceStore.getState().introState === 'animating') {
+        setIntroState('done');
+      }
+    }, 4000);
+    return () => clearTimeout(timeout);
+  }, [introState, setIntroState]);
 
   // Capture target positions and zero out geometry when animation starts
   useEffect(() => {
     if (introState !== 'animating' || !space) return;
 
-    // Find the Points object in the scene
-    let pointsObj: THREE.Points | null = null;
-    scene.traverse((obj) => {
-      if (obj instanceof THREE.Points && !pointsObj) {
-        pointsObj = obj;
+    function tryInit() {
+      // Find the Points object in the scene
+      let pointsObj: THREE.Points | null = null;
+      scene.traverse((obj) => {
+        if (obj instanceof THREE.Points && !pointsObj) {
+          pointsObj = obj;
+        }
+      });
+
+      if (!pointsObj) {
+        // Points not in scene yet (R3F reconciler timing) — retry next frame
+        rafRef.current = requestAnimationFrame(tryInit);
+        return;
       }
-    });
 
-    if (!pointsObj) return;
+      const geo = (pointsObj as THREE.Points).geometry;
+      const posAttr = geo.getAttribute('position') as THREE.BufferAttribute;
+      const positions = posAttr.array as Float32Array;
 
-    const geo = (pointsObj as THREE.Points).geometry;
-    const posAttr = geo.getAttribute('position') as THREE.BufferAttribute;
-    const positions = posAttr.array as Float32Array;
+      // Store target positions
+      targetPositions.current = new Float32Array(positions);
 
-    // Store target positions
-    targetPositions.current = new Float32Array(positions);
+      // Set all positions to origin
+      positions.fill(0);
+      posAttr.needsUpdate = true;
 
-    // Set all positions to origin
-    positions.fill(0);
-    posAttr.needsUpdate = true;
+      timeRef.current = 0;
+    }
 
-    timeRef.current = 0;
+    tryInit();
+
+    return () => {
+      if (rafRef.current != null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+    };
   }, [introState, space, scene]);
 
   useFrame((_, delta) => {

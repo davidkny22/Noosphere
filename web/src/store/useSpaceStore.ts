@@ -209,6 +209,7 @@ export const useSpaceStore = create<SpaceState>((set) => ({
     flyToTarget: null,
     flyToState: 'idle',
     colorMode: 'cluster',
+    introState: 'pending',
     userEmbeds: loadUserEmbeds(url),
     selectedUserEmbed: null,
     hoveredUserEmbed: null,
