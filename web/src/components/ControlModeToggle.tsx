@@ -4,7 +4,7 @@ export function ControlModeToggle() {
   const controlMode = useSpaceStore((s) => s.controlMode);
   const setControlMode = useSpaceStore((s) => s.setControlMode);
 
-  // Available in all modes (beginner + advanced)
+  // Available in all modes (simple + advanced)
 
   return (
     <button

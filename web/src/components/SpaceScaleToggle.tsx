@@ -3,9 +3,6 @@ import { useSpaceStore } from '../store/useSpaceStore';
 export function SpaceScaleToggle() {
   const spaceScale = useSpaceStore((s) => s.spaceScale);
   const cycleSpaceScale = useSpaceStore((s) => s.cycleSpaceScale);
-  const isAdvancedMode = useSpaceStore((s) => s.isAdvancedMode);
-
-  if (!isAdvancedMode) return null;
 
   return (
     <button
