@@ -60,6 +60,41 @@ def _generate_pair_sklearn(X, n_neighbors, n_MN, n_FP, distance="euclidean", ver
 
 pacmap_internal.generate_pair = _generate_pair_sklearn
 
+# --- Continuous PaCMAP: smooth Phase 2→3 transition via cosine annealing ---
+# Only the Phase 2→3 boundary is smoothed. Phase 1→2 stays hard (smoothing it is harmful).
+import math
+
+def _cosine_weight(t, start, end):
+    """Raised cosine bell: 0 outside [start, end], peaks at midpoint."""
+    if t < start or t > end:
+        return 0.0
+    return 0.5 * (1.0 + math.cos(math.pi * (t - start) / (end - start) + math.pi))
+
+_PHASE_WINDOWS = [(-50, 100), (50, 200), (150, 450)]
+_PHASE_WEIGHT_TARGETS = (
+    (2.0, 3.0, 1.0),       # w_nb per phase
+    (1000.0, 3.0, 0.0),    # w_mn per phase
+    (1.0, 1.0, 1.0),       # w_fp per phase
+)
+
+def _find_weight_continuous(w_MN_init, itr, *, num_iters):
+    """Selective cosine-blended Phase 2→3 transition. Phase 1→2 stays hard."""
+    phase1_end = num_iters[0]
+    nb_targets, mn_targets, fp_targets = _PHASE_WEIGHT_TARGETS
+    if itr < phase1_end:
+        # Hard Phase 1 — identical to original PaCMAP
+        return mn_targets[0], nb_targets[0], fp_targets[0]
+    # From phase1_end onward: cosine-blend Phase 2 and Phase 3
+    w2 = _cosine_weight(itr, _PHASE_WINDOWS[1][0], _PHASE_WINDOWS[1][1])
+    w3 = _cosine_weight(itr, _PHASE_WINDOWS[2][0], _PHASE_WINDOWS[2][1])
+    wt = w2 + w3 + 1e-10
+    w_MN = (w2 * mn_targets[1] + w3 * mn_targets[2]) / wt
+    w_nb = (w2 * nb_targets[1] + w3 * nb_targets[2]) / wt
+    w_FP = (w2 * fp_targets[1] + w3 * fp_targets[2]) / wt
+    return w_MN, w_nb, w_FP
+
+pacmap_internal.find_weight = _find_weight_continuous
+
 # Read config from stdin
 config = json.loads(sys.stdin.readline())
 embeddings = np.load(config["embeddings_path"]).astype(np.float64)
