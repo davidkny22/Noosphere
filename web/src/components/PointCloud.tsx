@@ -46,15 +46,34 @@ varying vec3 vColor;
 void main() {
   vec2 center = gl_PointCoord - vec2(0.5);
   float r2 = dot(center, center);
+
+  // Dark halo shadow ring just outside the point body
+  // Point body fills r2 < 0.16 (r < 0.4), halo extends to r2 < 0.25 (r = 0.5)
   if (r2 > 0.25) discard;
 
-  // Fake sphere shading: darken edges, brighten center
-  float r = sqrt(r2) * 2.0; // 0 at center, 1 at edge
-  float diffuse = 1.0 - r * 0.5; // gentle edge darkening
-  // Specular highlight offset toward top-left
-  float spec = max(0.0, 1.0 - length(center - vec2(-0.12, -0.12)) * 5.0);
+  float outerR = sqrt(r2) * 2.5; // normalized: 0 center, 1 at body edge (r=0.4)
+  if (r2 > 0.16) {
+    // Halo band between body edge and sprite edge
+    float haloFade = (sqrt(r2) - 0.4) / 0.1; // 0 at body edge, 1 at sprite edge
+    float haloAlpha = (1.0 - haloFade) * 0.35;
+    gl_FragColor = vec4(0.0, 0.0, 0.0, haloAlpha);
+    #include <fog_fragment>
+    return;
+  }
 
-  vec3 shaded = vColor * diffuse + vec3(1.0) * spec * 0.3;
+  // Sphere shading with smooth falloff
+  float r = outerR;
+  float r3 = r * r * r; // cubic falloff for smoother gradient
+  float diffuse = 1.0 - r3 * 0.65; // darkens toward edges, bright center plateau
+
+  // Soft specular highlight offset toward top-left (light direction)
+  float specDist = length(center - vec2(-0.1, -0.1));
+  float spec = smoothstep(0.25, 0.0, specDist); // smooth falloff
+
+  // Rim darkening for depth
+  float rim = smoothstep(0.25, 0.4, sqrt(r2));
+
+  vec3 shaded = vColor * diffuse * (1.0 - rim * 0.4) + vec3(1.0) * spec * 0.25;
   gl_FragColor = vec4(shaded, 1.0);
 
   #include <fog_fragment>
@@ -259,7 +278,8 @@ export function PointCloud() {
         fragmentShader={fragmentShader}
         uniforms={uniforms}
         fog
-        transparent={false}
+        transparent
+        depthWrite={true}
       />
     </points>
   );
