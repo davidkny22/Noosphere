@@ -81,7 +81,7 @@ def bias(body: BiasRequest, request: Request):
 @router.post("/analogy", response_model=AnalogyResponse)
 def analogy(body: AnalogyRequest, request: Request):
     engine = _get_engine(request, body.space)
-    term, idx, coords, neighbors = engine.analogy(body.a, body.b, body.c, k=body.k)
+    term, idx, coords, neighbors, idx_a, idx_b, idx_c = engine.analogy(body.a, body.b, body.c, k=body.k)
     return AnalogyResponse(
         result_term=term,
         coords_3d=coords,
@@ -89,6 +89,9 @@ def analogy(body: AnalogyRequest, request: Request):
             Neighbor(term=engine.terms[n_idx], index=n_idx, distance=dist)
             for n_idx, dist in neighbors
         ],
+        index_a=idx_a,
+        index_b=idx_b,
+        index_c=idx_c,
     )
 
 

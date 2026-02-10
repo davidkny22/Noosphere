@@ -173,8 +173,9 @@ class SpaceEngine:
 
         return [(i, self.terms[i], float(scores[i])) for i in range(len(self.terms))]
 
-    def analogy(self, a: str, b: str, c: str, k: int = 10) -> tuple[str, int, tuple[float, float, float], list[tuple[int, float]]]:
-        """a is to b as c is to ? → d = b - a + c, find nearest. Uses existing embeddings for known terms."""
+    def analogy(self, a: str, b: str, c: str, k: int = 10) -> tuple[str, int, tuple[float, float, float], list[tuple[int, float]], int | None, int | None, int | None]:
+        """a is to b as c is to ? → d = b - a + c, find nearest. Uses existing embeddings for known terms.
+        Returns (result_term, result_idx, result_coords, neighbors, index_a, index_b, index_c)."""
         hit_a = self._lookup(a)
         hit_b = self._lookup(b)
         hit_c = self._lookup(c)
@@ -186,8 +187,14 @@ class SpaceEngine:
 
         neighbors = self.find_neighbors_by_vector(emb_d, k)
         best_idx = neighbors[0][0]
-        coords = self._project(emb_d)
-        return self.terms[best_idx], best_idx, coords, neighbors
+        # Use the existing 3D position of the nearest term, not the projected synthetic vector
+        coords = tuple(float(x) for x in self.positions_3d[best_idx])
+        return (
+            self.terms[best_idx], best_idx, coords, neighbors,
+            hit_a[0] if hit_a else None,
+            hit_b[0] if hit_b else None,
+            hit_c[0] if hit_c else None,
+        )
 
     def compare(self, text_a: str, text_b: str) -> tuple[float, tuple[float, float, float], tuple[float, float, float], int | None, int | None]:
         """Compare two texts: cosine similarity + both 3D coords + found indices. Uses existing positions for known terms."""

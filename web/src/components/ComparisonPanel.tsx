@@ -25,8 +25,9 @@ export function ComparisonPanel() {
 
       const existingA = findUserEmbed(textA.trim());
       const existingB = findUserEmbed(textB.trim());
-      const coordsA = existingA ? existingA.pos : result.coordsA;
-      const coordsB = existingB ? existingB.pos : result.coordsB;
+      // Priority: space position (index !== null) → existing userEmbed → server projection
+      const coordsA = result.indexA !== null ? result.coordsA : (existingA ? existingA.pos : result.coordsA);
+      const coordsB = result.indexB !== null ? result.coordsB : (existingB ? existingB.pos : result.coordsB);
 
       // Create userEmbeds for novel terms (not in space AND not an existing userEmbed)
       if (result.indexA === null && !existingA) {

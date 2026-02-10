@@ -18,7 +18,11 @@ export function AnalogyPanel() {
     setLoading(true);
     try {
       const result = await embeddingService.analogy(termA.trim(), termB.trim(), termC.trim());
-      useSpaceStore.getState().setAnalogyResult({
+      const store = useSpaceStore.getState();
+
+      // Server returns the existing space position of the result term (nearest neighbor),
+      // so coords_3d is always the real position — no projection or userEmbed needed.
+      store.setAnalogyResult({
         a: termA.trim(),
         b: termB.trim(),
         c: termC.trim(),
@@ -26,7 +30,7 @@ export function AnalogyPanel() {
         coordsResult: result.coords_3d,
         neighbors: result.neighbors,
       });
-      useSpaceStore.getState().flyTo(result.coords_3d);
+      store.flyTo(result.coords_3d);
     } catch (err) {
       console.error('Analogy computation failed:', err);
     } finally {
@@ -36,6 +40,7 @@ export function AnalogyPanel() {
 
   const clear = useCallback(() => {
     setAnalogyResult(null);
+    useSpaceStore.getState().cancelFlyTo();
   }, [setAnalogyResult]);
 
   if (!isAdvancedMode || !embeddingService) return null;

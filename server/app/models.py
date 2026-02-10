@@ -78,6 +78,9 @@ class AnalogyResponse(BaseModel):
     result_term: str
     coords_3d: tuple[float, float, float]
     neighbors: list[Neighbor]
+    index_a: int | None = None
+    index_b: int | None = None
+    index_c: int | None = None
 
 
 # --- /compare ---

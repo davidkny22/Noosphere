@@ -22,6 +22,9 @@ export interface AnalogyResult {
   result_term: string;
   coords_3d: [number, number, number];
   neighbors: Neighbor[];
+  indexA: number | null;
+  indexB: number | null;
+  indexC: number | null;
 }
 
 export interface CompareResult {

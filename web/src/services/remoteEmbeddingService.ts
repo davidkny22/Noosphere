@@ -40,6 +40,9 @@ export class RemoteEmbeddingService implements EmbeddingService {
       result_term: res.result_term,
       coords_3d: res.coords_3d,
       neighbors: res.neighbors,
+      indexA: res.index_a ?? null,
+      indexB: res.index_b ?? null,
+      indexC: res.index_c ?? null,
     };
   }
 
