@@ -5,8 +5,8 @@ import { useSpaceStore } from '../store/useSpaceStore';
 
 const POINT_SIZE_SCALE = 200;
 const POINT_SIZE_LOG_BASE = 8;
-const SCREEN_SCALE = 40.0;
-const SCALE_FACTOR = 1.5;
+const SCREEN_SCALE = 48.0;
+const SCALE_FACTOR = 1.0;
 const EMBED_COLOR: [number, number, number] = [1.0, 0.85, 0.2];
 
 const vertexShader = /* glsl */ `
@@ -42,9 +42,34 @@ varying vec3 vColor;
 
 void main() {
   vec2 center = gl_PointCoord - vec2(0.5);
-  if (dot(center, center) > 0.25) discard;
+  float r2 = dot(center, center);
 
-  gl_FragColor = vec4(vColor, 1.0);
+  // Dark halo shadow ring just outside the point body
+  if (r2 > 0.25) discard;
+
+  float outerR = sqrt(r2) * 2.5;
+  if (r2 > 0.16) {
+    float haloFade = (sqrt(r2) - 0.4) / 0.1;
+    float haloAlpha = (1.0 - haloFade) * 0.35;
+    gl_FragColor = vec4(0.0, 0.0, 0.0, haloAlpha);
+    #include <fog_fragment>
+    return;
+  }
+
+  // Sphere shading with smooth falloff
+  float r = outerR;
+  float r3 = r * r * r;
+  float diffuse = 1.0 - r3 * 0.65;
+
+  // Soft specular highlight
+  float specDist = length(center - vec2(-0.1, -0.1));
+  float spec = smoothstep(0.25, 0.0, specDist);
+
+  // Rim darkening
+  float rim = smoothstep(0.25, 0.4, sqrt(r2));
+
+  vec3 shaded = vColor * diffuse * (1.0 - rim * 0.4) + vec3(1.0) * spec * 0.25;
+  gl_FragColor = vec4(shaded, 1.0);
 
   #include <fog_fragment>
 }
@@ -147,7 +172,8 @@ export function UserEmbedPoints() {
         fragmentShader={fragmentShader}
         uniforms={uniforms}
         fog
-        transparent={false}
+        transparent
+        depthWrite={true}
       />
     </points>
   );

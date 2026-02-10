@@ -9,7 +9,7 @@ import { computeColors, buildClusterPalette } from '../systems/colorSystem';
 // via (pointSize * SCREEN_SCALE / distance). SCREEN_SCALE=300 matches TF projector.
 const POINT_SIZE_SCALE = 200;
 const POINT_SIZE_LOG_BASE = 8;
-const SCREEN_SCALE = 40.0;
+const SCREEN_SCALE = 48.0;
 const LARGE_SPACE_THRESHOLD = 50000;
 
 const vertexShader = /* glsl */ `
