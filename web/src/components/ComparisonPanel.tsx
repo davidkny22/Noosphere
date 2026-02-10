@@ -62,6 +62,8 @@ export function ComparisonPanel() {
 
   const clear = useCallback(() => {
     setComparisonResult(null);
+    // Clear flyToTarget so ProjectedMarker doesn't reappear at the old midpoint
+    useSpaceStore.getState().cancelFlyTo();
   }, [setComparisonResult]);
 
   if (!isAdvancedMode || !embeddingService) return null;
