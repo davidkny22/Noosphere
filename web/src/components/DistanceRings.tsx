@@ -9,6 +9,7 @@ const RINGS = [
 export function DistanceRings() {
   const selectedPoint = useSpaceStore((s) => s.selectedPoint);
   const isAdvancedMode = useSpaceStore((s) => s.isAdvancedMode);
+  const spaceScale = useSpaceStore((s) => s.spaceScale);
 
   if (!selectedPoint || !isAdvancedMode) return null;
 
@@ -17,7 +18,7 @@ export function DistanceRings() {
   return (
     <group position={[x, y, z]}>
       {RINGS.map((ring) => (
-        <mesh key={ring.radius}>
+        <mesh key={ring.radius} scale={[1 / spaceScale, 1 / spaceScale, 1 / spaceScale]}>
           <sphereGeometry args={[ring.radius, 32, 16]} />
           <meshBasicMaterial
             wireframe
