@@ -24,6 +24,7 @@ class Coords3D(BaseModel):
 # --- /embed ---
 
 class EmbedRequest(BaseModel):
+    space: str
     text: str
     k: int = 10
 
@@ -36,6 +37,7 @@ class EmbedResponse(BaseModel):
 # --- /neighbors ---
 
 class NeighborsRequest(BaseModel):
+    space: str
     index: int
     k: int = 10
 
@@ -47,6 +49,7 @@ class NeighborsResponse(BaseModel):
 # --- /bias ---
 
 class BiasRequest(BaseModel):
+    space: str
     pole_a: str
     pole_b: str
 
@@ -64,6 +67,7 @@ class BiasResponse(BaseModel):
 # --- /analogy ---
 
 class AnalogyRequest(BaseModel):
+    space: str
     a: str
     b: str
     c: str
@@ -79,6 +83,7 @@ class AnalogyResponse(BaseModel):
 # --- /compare ---
 
 class CompareRequest(BaseModel):
+    space: str
     text_a: str
     text_b: str
 
@@ -87,11 +92,12 @@ class CompareResponse(BaseModel):
     similarity: float
     coords_a: tuple[float, float, float]
     coords_b: tuple[float, float, float]
+    index_a: int | None = None  # index in space if found, None if novel
+    index_b: int | None = None
 
 
 # --- /health ---
 
 class HealthResponse(BaseModel):
     status: str = "ok"
-    model: str
-    num_points: int
+    spaces: list[str]

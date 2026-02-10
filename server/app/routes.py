@@ -1,8 +1,9 @@
 """API routes — all endpoints are thin wrappers around SpaceEngine."""
 from __future__ import annotations
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, HTTPException, Request
 
+from .engine import SpaceEngine
 from .models import (
     AnalogyRequest,
     AnalogyResponse,
@@ -22,18 +23,27 @@ from .models import (
 router = APIRouter()
 
 
+def _get_engine(request: Request, space: str) -> SpaceEngine:
+    """Look up engine by space prefix, raise 404 if not found."""
+    engines: dict[str, SpaceEngine] = request.app.state.engines
+    if space not in engines:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Space '{space}' not found. Available: {list(engines.keys())}",
+        )
+    return engines[space]
+
+
 @router.get("/health", response_model=HealthResponse)
 def health(request: Request):
-    engine = request.app.state.engine
     return HealthResponse(
-        model=engine.model_name,
-        num_points=engine.num_points,
+        spaces=list(request.app.state.engines.keys()),
     )
 
 
 @router.post("/embed", response_model=EmbedResponse)
 def embed(body: EmbedRequest, request: Request):
-    engine = request.app.state.engine
+    engine = _get_engine(request, body.space)
     coords, neighbors = engine.embed_text(body.text, k=body.k)
     return EmbedResponse(
         coords_3d=coords,
@@ -46,7 +56,7 @@ def embed(body: EmbedRequest, request: Request):
 
 @router.post("/neighbors", response_model=NeighborsResponse)
 def neighbors(body: NeighborsRequest, request: Request):
-    engine = request.app.state.engine
+    engine = _get_engine(request, body.space)
     results = engine.find_neighbors(body.index, k=body.k)
     return NeighborsResponse(
         neighbors=[
@@ -58,7 +68,7 @@ def neighbors(body: NeighborsRequest, request: Request):
 
 @router.post("/bias", response_model=BiasResponse)
 def bias(body: BiasRequest, request: Request):
-    engine = request.app.state.engine
+    engine = _get_engine(request, body.space)
     scores = engine.compute_bias_scores(body.pole_a, body.pole_b)
     return BiasResponse(
         scores=[
@@ -70,7 +80,7 @@ def bias(body: BiasRequest, request: Request):
 
 @router.post("/analogy", response_model=AnalogyResponse)
 def analogy(body: AnalogyRequest, request: Request):
-    engine = request.app.state.engine
+    engine = _get_engine(request, body.space)
     term, idx, coords, neighbors = engine.analogy(body.a, body.b, body.c, k=body.k)
     return AnalogyResponse(
         result_term=term,
@@ -84,10 +94,12 @@ def analogy(body: AnalogyRequest, request: Request):
 
 @router.post("/compare", response_model=CompareResponse)
 def compare(body: CompareRequest, request: Request):
-    engine = request.app.state.engine
-    similarity, coords_a, coords_b = engine.compare(body.text_a, body.text_b)
+    engine = _get_engine(request, body.space)
+    similarity, coords_a, coords_b, idx_a, idx_b = engine.compare(body.text_a, body.text_b)
     return CompareResponse(
         similarity=similarity,
         coords_a=coords_a,
         coords_b=coords_b,
+        index_a=idx_a,
+        index_b=idx_b,
     )

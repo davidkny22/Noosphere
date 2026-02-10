@@ -28,6 +28,8 @@ export interface CompareResult {
   similarity: number;
   coordsA: [number, number, number];
   coordsB: [number, number, number];
+  indexA: number | null;  // index in space if found, null if novel
+  indexB: number | null;
 }
 
 export interface EmbeddingService {

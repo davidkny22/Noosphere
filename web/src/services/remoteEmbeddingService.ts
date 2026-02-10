@@ -9,13 +9,15 @@ import type {
 
 export class RemoteEmbeddingService implements EmbeddingService {
   private baseUrl: string;
+  private spacePrefix: string;
 
-  constructor(serverUrl: string) {
+  constructor(serverUrl: string, spacePrefix: string) {
     this.baseUrl = serverUrl.replace(/\/$/, '');
+    this.spacePrefix = spacePrefix;
   }
 
   async embed(text: string): Promise<EmbedResult> {
-    const res = await this.post('/embed', { text, k: 10 });
+    const res = await this.post('/embed', { space: this.spacePrefix, text, k: 10 });
     return {
       coords_3d: res.coords_3d,
       neighbors: res.neighbors,
@@ -23,17 +25,17 @@ export class RemoteEmbeddingService implements EmbeddingService {
   }
 
   async neighbors(pointId: string, k: number): Promise<Neighbor[]> {
-    const res = await this.post('/neighbors', { index: parseInt(pointId), k });
+    const res = await this.post('/neighbors', { space: this.spacePrefix, index: parseInt(pointId), k });
     return res.neighbors;
   }
 
   async biasProbe(poleA: string, poleB: string): Promise<BiasScore[]> {
-    const res = await this.post('/bias', { pole_a: poleA, pole_b: poleB });
+    const res = await this.post('/bias', { space: this.spacePrefix, pole_a: poleA, pole_b: poleB });
     return res.scores;
   }
 
   async analogy(a: string, b: string, c: string): Promise<AnalogyResult> {
-    const res = await this.post('/analogy', { a, b, c, k: 10 });
+    const res = await this.post('/analogy', { space: this.spacePrefix, a, b, c, k: 10 });
     return {
       result_term: res.result_term,
       coords_3d: res.coords_3d,
@@ -42,11 +44,13 @@ export class RemoteEmbeddingService implements EmbeddingService {
   }
 
   async compare(textA: string, textB: string): Promise<CompareResult> {
-    const res = await this.post('/compare', { text_a: textA, text_b: textB });
+    const res = await this.post('/compare', { space: this.spacePrefix, text_a: textA, text_b: textB });
     return {
       similarity: res.similarity,
       coordsA: res.coords_a,
       coordsB: res.coords_b,
+      indexA: res.index_a ?? null,
+      indexB: res.index_b ?? null,
     };
   }
 

@@ -27,34 +27,23 @@ def _patch_annoy():
 class SpaceEngine:
     """Stateless engine operating on a single model's artifacts."""
 
+    # Model name → HuggingFace model ID mapping (used by load_all_engines)
+    MODEL_MAP = {
+        "minilm": "sentence-transformers/all-MiniLM-L6-v2",
+        "qwen3": "Qwen/Qwen3-Embedding-0.6B",
+    }
+
     def __init__(
         self,
         space_dir: str | Path,
-        model_name: str = "qwen3",
-        space_prefix: str | None = None,
+        prefix: str,
+        encoder: SentenceTransformer,
+        model_name: str = "minilm",
     ):
         space_dir = Path(space_dir)
         self.model_name = model_name
-
-        # Discover artifact prefix (e.g., "qwen3-10k")
-        if space_prefix:
-            # Explicit prefix — deterministic
-            prefix = space_prefix
-            faiss_path = space_dir / f"{prefix}.faiss"
-            if not faiss_path.exists():
-                raise FileNotFoundError(f"FAISS index not found: {faiss_path}")
-        else:
-            # Legacy glob discovery — picks first match (non-deterministic)
-            faiss_files = list(space_dir.glob(f"{model_name}-*.faiss"))
-            if not faiss_files:
-                raise FileNotFoundError(f"No FAISS index found for {model_name} in {space_dir}")
-            prefix = faiss_files[0].stem
-            logger.warning(
-                "No explicit space prefix — glob matched %d files, using '%s'. "
-                "Set NOOSPHERE_SPACE_PREFIX for deterministic behavior.",
-                len(faiss_files), prefix,
-            )
         self._prefix = prefix
+        self.encoder = encoder
 
         # Load space JSON for term list
         json_gz = space_dir / f"{prefix}.json.gz"
@@ -75,7 +64,8 @@ class SpaceEngine:
         logger.info("Loaded %d terms from %s", self.num_points, prefix)
 
         # Load FAISS index
-        self.faiss_index = faiss.read_index(str(faiss_files[0]))
+        faiss_path = space_dir / f"{prefix}.faiss"
+        self.faiss_index = faiss.read_index(str(faiss_path))
         logger.info("FAISS index: %d vectors", self.faiss_index.ntotal)
 
         if self.faiss_index.ntotal != self.num_points:
@@ -107,17 +97,15 @@ class SpaceEngine:
             logger.info("ParamPaCMAP model loaded from %s", param_path)
         else:
             self.param_model = None
-            logger.warning("No ParamPaCMAP model found — transform() unavailable")
+            logger.warning("No ParamPaCMAP model found for %s — transform() unavailable", prefix)
 
-        # Load sentence transformer for encoding novel text
-        model_map = {
-            "minilm": "sentence-transformers/all-MiniLM-L6-v2",
-            "qwen3": "Qwen/Qwen3-Embedding-0.6B",
-        }
-        model_id = model_map[model_name]
-        logger.info("Loading sentence transformer: %s", model_id)
-        self.encoder = SentenceTransformer(model_id)
-        logger.info("Encoder ready")
+    def _lookup(self, text: str) -> tuple[int, np.ndarray, tuple[float, float, float]] | None:
+        """Look up a term in the space. Returns (index, hd_embedding, 3d_pos) or None."""
+        text_lower = text.strip().lower()
+        for i, term in enumerate(self.terms):
+            if term.lower() == text_lower:
+                return i, self.hd_embeddings[i], tuple(float(x) for x in self.positions_3d[i])
+        return None
 
     def _encode(self, text: str) -> np.ndarray:
         """Encode text to HD embedding vector (L2-normalized)."""
@@ -140,7 +128,12 @@ class SpaceEngine:
         return tuple(float(x) for x in pos)
 
     def embed_text(self, text: str, k: int = 10) -> tuple[tuple[float, float, float], list[tuple[int, float]]]:
-        """Encode text → 3D coords + K nearest neighbors."""
+        """Encode text → 3D coords + K nearest neighbors. Uses existing position if term is in space."""
+        hit = self._lookup(text)
+        if hit:
+            idx, hd_vec, coords = hit
+            neighbors = self.find_neighbors(idx, k)
+            return coords, neighbors
         hd_vec = self._encode(text)
         coords = self._project(hd_vec)
         neighbors = self.find_neighbors_by_vector(hd_vec, k)
@@ -164,8 +157,10 @@ class SpaceEngine:
 
     def compute_bias_scores(self, pole_a: str, pole_b: str) -> list[tuple[int, str, float]]:
         """Compute bias score for every term: cos(term, poleB) - cos(term, poleA), normalized to [-1, 1]."""
-        emb_a = self._encode(pole_a)
-        emb_b = self._encode(pole_b)
+        hit_a = self._lookup(pole_a)
+        hit_b = self._lookup(pole_b)
+        emb_a = hit_a[1] if hit_a else self._encode(pole_a)
+        emb_b = hit_b[1] if hit_b else self._encode(pole_b)
 
         # Cosine similarity (embeddings are already L2-normalized in FAISS index)
         cos_a = self.hd_embeddings @ emb_a  # (N,)
@@ -179,10 +174,13 @@ class SpaceEngine:
         return [(i, self.terms[i], float(scores[i])) for i in range(len(self.terms))]
 
     def analogy(self, a: str, b: str, c: str, k: int = 10) -> tuple[str, int, tuple[float, float, float], list[tuple[int, float]]]:
-        """a is to b as c is to ? → d = b - a + c, find nearest."""
-        emb_a = self._encode(a)
-        emb_b = self._encode(b)
-        emb_c = self._encode(c)
+        """a is to b as c is to ? → d = b - a + c, find nearest. Uses existing embeddings for known terms."""
+        hit_a = self._lookup(a)
+        hit_b = self._lookup(b)
+        hit_c = self._lookup(c)
+        emb_a = hit_a[1] if hit_a else self._encode(a)
+        emb_b = hit_b[1] if hit_b else self._encode(b)
+        emb_c = hit_c[1] if hit_c else self._encode(c)
         emb_d = emb_b - emb_a + emb_c
         emb_d = emb_d / (np.linalg.norm(emb_d) + 1e-10)
 
@@ -191,11 +189,13 @@ class SpaceEngine:
         coords = self._project(emb_d)
         return self.terms[best_idx], best_idx, coords, neighbors
 
-    def compare(self, text_a: str, text_b: str) -> tuple[float, tuple[float, float, float], tuple[float, float, float]]:
-        """Compare two texts: cosine similarity + both 3D coords."""
-        emb_a = self._encode(text_a)
-        emb_b = self._encode(text_b)
+    def compare(self, text_a: str, text_b: str) -> tuple[float, tuple[float, float, float], tuple[float, float, float], int | None, int | None]:
+        """Compare two texts: cosine similarity + both 3D coords + found indices. Uses existing positions for known terms."""
+        hit_a = self._lookup(text_a)
+        hit_b = self._lookup(text_b)
+        emb_a = hit_a[1] if hit_a else self._encode(text_a)
+        emb_b = hit_b[1] if hit_b else self._encode(text_b)
         similarity = float(np.dot(emb_a, emb_b))
-        coords_a = self._project(emb_a)
-        coords_b = self._project(emb_b)
-        return similarity, coords_a, coords_b
+        coords_a = hit_a[2] if hit_a else self._project(emb_a)
+        coords_b = hit_b[2] if hit_b else self._project(emb_b)
+        return similarity, coords_a, coords_b, (hit_a[0] if hit_a else None), (hit_b[0] if hit_b else None)

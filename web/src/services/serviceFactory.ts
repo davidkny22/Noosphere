@@ -1,6 +1,6 @@
 import type { EmbeddingService } from './embeddingService';
 import { RemoteEmbeddingService } from './remoteEmbeddingService';
-import { LocalEmbeddingService } from './localEmbeddingService';
+// import { LocalEmbeddingService } from './localEmbeddingService';
 
 export type ServiceMode = 'auto' | 'remote' | 'local';
 
@@ -19,18 +19,25 @@ export async function createEmbeddingService(
       clearTimeout(timeout);
 
       if (res.ok) {
-        return { service: new RemoteEmbeddingService(serverUrl), mode: 'remote' };
+        // Derive space prefix from URL: "/spaces/minilm-10k.json.gz" → "minilm-10k"
+        const prefix = spaceUrl.split('/').pop()!.replace(/\.json(\.gz)?$/, '');
+        return { service: new RemoteEmbeddingService(serverUrl, prefix), mode: 'remote' };
       }
     } catch {
-      if (mode === 'remote') {
-        throw new Error('Remote server unreachable');
-      }
+      // if (mode === 'remote') {
+      //   throw new Error('Remote server unreachable');
+      // }
       // auto mode: fall through to local
     }
   }
 
-  // Local fallback (MiniLM only)
-  const local = new LocalEmbeddingService(spaceUrl);
-  await local.init(terms, positions);
-  return { service: local, mode: 'local' };
+  // Local fallback disabled — LocalEmbeddingService fabricates 3D positions
+  // via weighted-average instead of using trained ParamPaCMAP. Will be
+  // rebuilt with Transformers.js + proper projection later.
+  // const local = new LocalEmbeddingService(spaceUrl);
+  // await local.init(terms, positions);
+  // return { service: local, mode: 'local' };
+  throw new Error(
+    `Embedding server unreachable at ${serverUrl}. Start the server with: cd server && uv run serve`
+  );
 }

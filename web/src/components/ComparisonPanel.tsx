@@ -20,7 +20,26 @@ export function ComparisonPanel() {
       const coordsA = result.coordsA;
       const coordsB = result.coordsB;
 
-      useSpaceStore.getState().setComparisonResult({
+      // Create userEmbeds for novel terms (not found in space)
+      const store = useSpaceStore.getState();
+      if (result.indexA === null) {
+        store.addUserEmbed({
+          id: crypto.randomUUID(),
+          label: textA.trim(),
+          pos: coordsA,
+          createdAt: Date.now(),
+        });
+      }
+      if (result.indexB === null) {
+        store.addUserEmbed({
+          id: crypto.randomUUID(),
+          label: textB.trim(),
+          pos: coordsB,
+          createdAt: Date.now(),
+        });
+      }
+
+      store.setComparisonResult({
         textA: textA.trim(),
         textB: textB.trim(),
         similarity: result.similarity,
