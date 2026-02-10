@@ -96,6 +96,7 @@ interface SpaceState {
 
   // Space scale
   spaceScale: number;
+  scaleBarDistance: number;
 
   // Pulse effect on teleport target
   pulseIndex: number | null;
@@ -192,6 +193,7 @@ export const useSpaceStore = create<SpaceState>((set) => ({
 
   controlMode: 'orbit',
   spaceScale: 1,
+  scaleBarDistance: 0,
   pulseIndex: null,
 
   isAdvancedMode: (typeof localStorage !== 'undefined' && localStorage.getItem('noosphere-advanced') === 'true') || false,

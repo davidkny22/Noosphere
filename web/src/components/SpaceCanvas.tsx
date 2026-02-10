@@ -17,6 +17,7 @@ import { ComparisonMarkers } from './ComparisonMarkers';
 import { AnalogyMarkers } from './AnalogyMarkers';
 import { Breadcrumbs } from './Breadcrumbs';
 import { FlyControls } from './FlyControls';
+import { DistanceLegendUpdater } from './DistanceLegend';
 import { useSpaceStore } from '../store/useSpaceStore';
 
 const FOG_COLOR = '#0a0a0a';
@@ -110,6 +111,7 @@ export function SpaceCanvas() {
             radius={0.4}
           />
         </EffectComposer>
+        <DistanceLegendUpdater />
         {showStats && <Stats />}
       </Canvas>
     </div>

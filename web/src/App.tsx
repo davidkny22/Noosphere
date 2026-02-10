@@ -11,6 +11,7 @@ import { PrecisionToggle } from './components/PrecisionToggle';
 import { ControlModeToggle } from './components/ControlModeToggle';
 import { SpaceScaleToggle } from './components/SpaceScaleToggle';
 import { ModeToggle } from './components/ModeToggle';
+import { DistanceLegend } from './components/DistanceLegend';
 import { useSpaceStore } from './store/useSpaceStore';
 
 function App() {
@@ -36,6 +37,7 @@ function App() {
       <SpaceScaleToggle />
       <ControlModeToggle />
       <ModeToggle />
+      <DistanceLegend />
     </>
   );
 }
