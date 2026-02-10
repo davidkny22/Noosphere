@@ -12,6 +12,7 @@ const OUTER_RADIUS = 1.8;
 export function ProjectedMarker() {
   const flyToTarget = useSpaceStore((s) => s.flyToTarget);
   const flyToState = useSpaceStore((s) => s.flyToState);
+  const comparisonResult = useSpaceStore((s) => s.comparisonResult);
   const groupRef = useRef<THREE.Group>(null);
   const innerRef = useRef<THREE.Mesh>(null);
   const outerRef = useRef<THREE.Mesh>(null);
@@ -63,7 +64,8 @@ export function ProjectedMarker() {
     outerMat.opacity = (0.12 + 0.08 * wave) * fadeAlpha;
   });
 
-  if (!flyToTarget) return null;
+  // Don't render when a comparison is active — ComparisonMarkers handles that
+  if (!flyToTarget || comparisonResult) return null;
 
   return (
     <group ref={groupRef} position={flyToTarget} visible={false}>

@@ -15,6 +15,7 @@ export function ComparisonMarkers() {
   const sphereBRef = useRef<THREE.Mesh>(null);
   const glowARef = useRef<THREE.Mesh>(null);
   const glowBRef = useRef<THREE.Mesh>(null);
+  const lineMaterialRef = useRef<THREE.LineDashedMaterial>(null);
   const timeRef = useRef(0);
 
   // Build dashed line geometry between A and B
@@ -58,6 +59,11 @@ export function ComparisonMarkers() {
     if (sphereBRef.current) sphereBRef.current.scale.setScalar(innerScale);
     if (glowARef.current) glowARef.current.scale.setScalar(outerScale);
     if (glowBRef.current) glowBRef.current.scale.setScalar(outerScale);
+
+    // Line opacity pulses between 0.2 and 0.6
+    if (lineMaterialRef.current) {
+      lineMaterialRef.current.opacity = 0.4 + 0.2 * wave;
+    }
   });
 
   if (!comparisonResult) return null;
@@ -76,6 +82,7 @@ export function ComparisonMarkers() {
             opacity={0.8}
             fog={false}
             depthWrite={false}
+            depthTest={false}
           />
         </mesh>
         <mesh ref={glowARef}>
@@ -87,6 +94,7 @@ export function ComparisonMarkers() {
             blending={THREE.AdditiveBlending}
             fog={false}
             depthWrite={false}
+            depthTest={false}
           />
         </mesh>
       </group>
@@ -101,6 +109,7 @@ export function ComparisonMarkers() {
             opacity={0.8}
             fog={false}
             depthWrite={false}
+            depthTest={false}
           />
         </mesh>
         <mesh ref={glowBRef}>
@@ -112,14 +121,16 @@ export function ComparisonMarkers() {
             blending={THREE.AdditiveBlending}
             fog={false}
             depthWrite={false}
+            depthTest={false}
           />
         </mesh>
       </group>
 
-      {/* Dashed line connecting A and B */}
+      {/* Dashed line connecting A and B — opacity pulses */}
       {lineGeometry && (
         <line geometry={lineGeometry}>
           <lineDashedMaterial
+            ref={lineMaterialRef}
             color="#ffffff"
             transparent
             opacity={0.4}
