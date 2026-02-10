@@ -5,7 +5,7 @@ import { Vector3 } from 'three';
 import { useSpaceStore } from '../store/useSpaceStore';
 
 const CULL_DISTANCE = 100;
-const UPDATE_INTERVAL = 0.5; // seconds between culling updates
+const UPDATE_INTERVAL = 0.25; // seconds between culling updates
 
 export function ClusterLabels() {
   const space = useSpaceStore((s) => s.space);
