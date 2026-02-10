@@ -47,9 +47,9 @@ void main() {
   // Dark halo shadow ring just outside the point body
   if (r2 > 0.25) discard;
 
-  float outerR = sqrt(r2) * 2.5;
-  if (r2 > 0.16) {
-    float haloFade = (sqrt(r2) - 0.4) / 0.1;
+  float outerR = sqrt(r2) * 2.27;
+  if (r2 > 0.19) {
+    float haloFade = (sqrt(r2) - 0.44) / 0.06;
     float haloAlpha = (1.0 - haloFade) * 0.35;
     gl_FragColor = vec4(0.0, 0.0, 0.0, haloAlpha);
     #include <fog_fragment>

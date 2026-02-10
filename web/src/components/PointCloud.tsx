@@ -51,10 +51,10 @@ void main() {
   // Point body fills r2 < 0.16 (r < 0.4), halo extends to r2 < 0.25 (r = 0.5)
   if (r2 > 0.25) discard;
 
-  float outerR = sqrt(r2) * 2.5; // normalized: 0 center, 1 at body edge (r=0.4)
-  if (r2 > 0.16) {
-    // Halo band between body edge and sprite edge
-    float haloFade = (sqrt(r2) - 0.4) / 0.1; // 0 at body edge, 1 at sprite edge
+  float outerR = sqrt(r2) * 2.27; // normalized: 0 center, 1 at body edge (r=0.44)
+  if (r2 > 0.19) {
+    // Thin halo band between body edge and sprite edge
+    float haloFade = (sqrt(r2) - 0.44) / 0.06; // 0 at body edge, 1 at sprite edge
     float haloAlpha = (1.0 - haloFade) * 0.35;
     gl_FragColor = vec4(0.0, 0.0, 0.0, haloAlpha);
     #include <fog_fragment>
