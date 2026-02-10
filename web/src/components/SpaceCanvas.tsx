@@ -19,6 +19,7 @@ import { Breadcrumbs } from './Breadcrumbs';
 import { FlyControls } from './FlyControls';
 import { DistanceLegendUpdater } from './DistanceLegend';
 import { DistanceRings } from './DistanceRings';
+import { CameraLight } from './CameraLight';
 import { useSpaceStore } from '../store/useSpaceStore';
 
 const FOG_COLOR = '#0a0a0a';
@@ -74,8 +75,9 @@ export function SpaceCanvas() {
       >
         <fog attach="fog" args={[FOG_COLOR, fogNear * spaceScale, fogFar * spaceScale]} />
         <ambientLight intensity={0.4} />
-        <directionalLight position={[50, 50, 50]} intensity={0.6} />
-        <directionalLight position={[-50, -30, -50]} intensity={0.3} />
+        <directionalLight position={[50, 50, 50]} intensity={0.5} />
+        <directionalLight position={[-50, -30, -50]} intensity={0.2} />
+        <CameraLight />
         <group scale={[spaceScale, spaceScale, spaceScale]}>
           {/* <ClusterFog /> */}
           <PointCloud />
@@ -94,8 +96,7 @@ export function SpaceCanvas() {
         <OrbitControls
           makeDefault
           enabled={controlMode === 'orbit'}
-          enableDamping
-          dampingFactor={0.05}
+          enableDamping={false}
           rotateSpeed={0.6}
           panSpeed={0.7}
           minDistance={0}

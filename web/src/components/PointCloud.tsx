@@ -1,8 +1,10 @@
-import { useRef, useEffect, useMemo } from 'react';
+import { useRef, useEffect, useMemo, useCallback } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useSpaceStore } from '../store/useSpaceStore';
 import { computeColors, buildClusterPalette } from '../systems/colorSystem';
+
+const DRAG_THRESHOLD_PX = 3;
 
 // Inverse-log point sizing (TF projector formula)
 // pointSize is a diameter in world-ish units; vertex shader converts to screen pixels
@@ -90,8 +92,26 @@ export function PointCloud() {
   const biasScores = useSpaceStore((s) => s.biasScores);
   // const introState = useSpaceStore((s) => s.introState);
   const pulseIndex = useSpaceStore((s) => s.pulseIndex);
-  const { raycaster } = useThree();
+  const { raycaster, gl } = useThree();
   const pulseTime = useRef(0);
+  const pointerDownPos = useRef<{ x: number; y: number } | null>(null);
+
+  // Track pointer-down position for click vs drag discrimination
+  useEffect(() => {
+    const canvas = gl.domElement;
+    const handlePointerDown = (e: PointerEvent) => {
+      pointerDownPos.current = { x: e.clientX, y: e.clientY };
+    };
+    canvas.addEventListener('pointerdown', handlePointerDown);
+    return () => canvas.removeEventListener('pointerdown', handlePointerDown);
+  }, [gl]);
+
+  const wasDrag = useCallback((e: { clientX?: number; clientY?: number }) => {
+    if (!pointerDownPos.current || e.clientX == null || e.clientY == null) return false;
+    const dx = e.clientX - pointerDownPos.current.x;
+    const dy = e.clientY - pointerDownPos.current.y;
+    return Math.sqrt(dx * dx + dy * dy) > DRAG_THRESHOLD_PX;
+  }, []);
 
   const palette = useMemo(() => {
     if (!space) return new Map<number, [number, number, number]>();
@@ -217,9 +237,10 @@ export function PointCloud() {
   };
 
   // Handle click — re-raycast and sort by distanceToRay for accuracy
-  const handleClick = (e: THREE.Intersection & { stopPropagation: () => void }) => {
-    // if (introState !== 'done' || !pointsRef.current) return;
+  // Suppresses click if pointer moved more than DRAG_THRESHOLD_PX (drag discrimination)
+  const handleClick = (e: THREE.Intersection & { stopPropagation: () => void; nativeEvent?: PointerEvent }) => {
     if (!pointsRef.current) return;
+    if (e.nativeEvent && wasDrag(e.nativeEvent)) return;
     e.stopPropagation();
     const hits = raycaster.intersectObject(pointsRef.current);
     if (hits.length === 0) return;
@@ -233,7 +254,9 @@ export function PointCloud() {
   };
 
   // Click on background deselects and clears neighborhood
-  const handlePointerMissed = () => {
+  // Suppresses if pointer moved (drag discrimination)
+  const handlePointerMissed = (e: MouseEvent) => {
+    if (wasDrag(e)) return;
     const store = useSpaceStore.getState();
     store.selectPoint(null);
     if (store.neighborCenter != null) {
