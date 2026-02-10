@@ -253,7 +253,7 @@ export const useSpaceStore = create<SpaceState>((set) => ({
   setControlMode: (mode) => set({ controlMode: mode }),
   setPulseIndex: (index) => set({ pulseIndex: index }),
   cycleSpaceScale: () => set((s) => {
-    const scales = [1, 2, 3];
+    const scales = [0.5, 1, 2, 3];
     const next = scales[(scales.indexOf(s.spaceScale) + 1) % scales.length]!;
     return { spaceScale: next };
   }),
