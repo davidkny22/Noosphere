@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Canvas } from '@react-three/fiber';
+import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, Stats } from '@react-three/drei';
+import * as THREE from 'three';
 import { PointCloud } from './PointCloud';
 import { PointLabel } from './PointLabel';
 import { ClusterLabels } from './ClusterLabels';
@@ -19,10 +20,46 @@ import { FlyControls } from './FlyControls';
 import { DistanceLegendUpdater } from './DistanceLegend';
 import { DistanceRings } from './DistanceRings';
 import { CameraLight } from './CameraLight';
+import { BookmarkRestore } from './BookmarkRestore';
 import { useSpaceStore } from '../store/useSpaceStore';
 
 const FOG_COLOR = '#0a0a0a';
 const NUM_POINTS_FOG_THRESHOLD = 50000;
+
+/** Ctrl+drag swaps orbit ↔ pan on OrbitControls (trackpad-friendly). */
+function CtrlPanSwap() {
+  const { controls } = useThree();
+
+  useEffect(() => {
+    if (!controls) return;
+    const orbit = controls as unknown as { mouseButtons: { LEFT: number; RIGHT: number } };
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Control') {
+        orbit.mouseButtons.LEFT = THREE.MOUSE.PAN;
+        orbit.mouseButtons.RIGHT = THREE.MOUSE.ROTATE;
+      }
+    };
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'Control') {
+        orbit.mouseButtons.LEFT = THREE.MOUSE.ROTATE;
+        orbit.mouseButtons.RIGHT = THREE.MOUSE.PAN;
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    window.addEventListener('keyup', onKeyUp);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('keyup', onKeyUp);
+      // Restore defaults on unmount
+      orbit.mouseButtons.LEFT = THREE.MOUSE.ROTATE;
+      orbit.mouseButtons.RIGHT = THREE.MOUSE.PAN;
+    };
+  }, [controls]);
+
+  return null;
+}
 
 export function SpaceCanvas() {
   const space = useSpaceStore((s) => s.space);
@@ -101,6 +138,7 @@ export function SpaceCanvas() {
           maxDistance={500}
           enableZoom={false}
         />
+        <CtrlPanSwap />
         <IntroAnimation />
         <ScrollZoom />
         <FlyControls />
@@ -112,6 +150,7 @@ export function SpaceCanvas() {
             radius={0.4}
           />
         </EffectComposer>
+        <BookmarkRestore />
         <DistanceLegendUpdater />
         {showStats && <Stats />}
       </Canvas>

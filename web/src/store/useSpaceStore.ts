@@ -137,6 +137,17 @@ interface SpaceState {
 
 const DEFAULT_SPACE_URL = '/spaces/minilm-10k.json.gz';
 
+/** Read space URL from bookmark hash if present, otherwise use default. */
+function getInitialSpaceUrl(): string {
+  const hash = typeof window !== 'undefined' ? window.location.hash : '';
+  if (hash.length > 1) {
+    const params = new URLSearchParams(hash.slice(1));
+    const sp = params.get('sp');
+    if (sp) return sp;
+  }
+  return DEFAULT_SPACE_URL;
+}
+
 export const AVAILABLE_SPACES = [
   { id: 'minilm-10k', label: 'MiniLM 10K (384d)', url: '/spaces/minilm-10k.json.gz' },
   { id: 'minilm-150k', label: 'MiniLM 150K (384d)', url: '/spaces/minilm-150k.json.gz' },
@@ -145,7 +156,7 @@ export const AVAILABLE_SPACES = [
 ];
 
 export const useSpaceStore = create<SpaceState>((set) => ({
-  spaceUrl: DEFAULT_SPACE_URL,
+  spaceUrl: getInitialSpaceUrl(),
   space: null,
   loading: true,
   error: null,

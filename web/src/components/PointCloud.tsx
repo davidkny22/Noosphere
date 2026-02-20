@@ -3,6 +3,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useSpaceStore } from '../store/useSpaceStore';
 import { computeColors, buildClusterPalette } from '../systems/colorSystem';
+import { useGpuPicking, buildPickingColors } from '../hooks/useGpuPicking';
 
 const DRAG_THRESHOLD_PX = 3;
 
@@ -90,26 +91,9 @@ export function PointCloud() {
   const neighborCenter = useSpaceStore((s) => s.neighborCenter);
   const biasScores = useSpaceStore((s) => s.biasScores);
   const pulseIndex = useSpaceStore((s) => s.pulseIndex);
-  const { raycaster, gl } = useThree();
+  const { gl } = useThree();
   const pulseTime = useRef(0);
   const pointerDownPos = useRef<{ x: number; y: number } | null>(null);
-
-  // Track pointer-down position for click vs drag discrimination
-  useEffect(() => {
-    const canvas = gl.domElement;
-    const handlePointerDown = (e: PointerEvent) => {
-      pointerDownPos.current = { x: e.clientX, y: e.clientY };
-    };
-    canvas.addEventListener('pointerdown', handlePointerDown);
-    return () => canvas.removeEventListener('pointerdown', handlePointerDown);
-  }, [gl]);
-
-  const wasDrag = useCallback((e: { clientX?: number; clientY?: number }) => {
-    if (!pointerDownPos.current || e.clientX == null || e.clientY == null) return false;
-    const dx = e.clientX - pointerDownPos.current.x;
-    const dy = e.clientY - pointerDownPos.current.y;
-    return Math.sqrt(dx * dx + dy * dy) > DRAG_THRESHOLD_PX;
-  }, []);
 
   const palette = useMemo(() => {
     if (!space) return new Map<number, [number, number, number]>();
@@ -123,7 +107,7 @@ export function PointCloud() {
     return POINT_SIZE_SCALE / Math.log(n) / Math.log(POINT_SIZE_LOG_BASE);
   }, [space]);
 
-  // Build geometry buffers
+  // Build geometry buffers (including pickingColor for GPU picking)
   const geometry = useMemo(() => {
     if (!space) return null;
     const n = space.points.length;
@@ -141,10 +125,57 @@ export function PointCloud() {
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
     geo.setAttribute('scaleFactor', new THREE.BufferAttribute(scaleFactors, 1));
-    // Color attribute will be set in the color update effect
     geo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(n * 3), 3));
+    geo.setAttribute('pickingColor', new THREE.BufferAttribute(buildPickingColors(n), 3));
     return geo;
   }, [space]);
+
+  // GPU picking — O(1) hover detection via offscreen color-ID render
+  const pickedIndex = useGpuPicking(pointsRef, pointSize, SCREEN_SCALE);
+
+  // Track pointer-down position for click vs drag discrimination
+  useEffect(() => {
+    const canvas = gl.domElement;
+    const handlePointerDown = (e: PointerEvent) => {
+      pointerDownPos.current = { x: e.clientX, y: e.clientY };
+    };
+    canvas.addEventListener('pointerdown', handlePointerDown);
+    return () => canvas.removeEventListener('pointerdown', handlePointerDown);
+  }, [gl]);
+
+  const wasDrag = useCallback((e: MouseEvent) => {
+    if (!pointerDownPos.current) return false;
+    const dx = e.clientX - pointerDownPos.current.x;
+    const dy = e.clientY - pointerDownPos.current.y;
+    return Math.sqrt(dx * dx + dy * dy) > DRAG_THRESHOLD_PX;
+  }, []);
+
+  // Click handling via canvas DOM event (uses GPU-picked index, not raycasting)
+  useEffect(() => {
+    const canvas = gl.domElement;
+    const handleClick = (e: MouseEvent) => {
+      if (wasDrag(e)) return;
+      const idx = pickedIndex.current;
+      if (idx != null && space?.points[idx]) {
+        useSpaceStore.getState().selectPoint(space.points[idx]);
+      } else {
+        // Clicked on background — deselect, clear neighborhood and highlights
+        const store = useSpaceStore.getState();
+        store.selectPoint(null);
+        if (store.highlightedIndices.size > 0) {
+          store.setHighlightedIndices(new Set());
+        }
+        if (store.neighborCenter != null) {
+          store.setNeighborhood(null, []);
+        }
+        if (store.colorMode !== 'cluster') {
+          store.setColorMode('cluster');
+        }
+      }
+    };
+    canvas.addEventListener('click', handleClick);
+    return () => canvas.removeEventListener('click', handleClick);
+  }, [gl, space, wasDrag, pickedIndex]);
 
   // Update colors and scale factors when highlights/mode change
   useEffect(() => {
@@ -176,11 +207,6 @@ export function PointCloud() {
     scaleAttr.needsUpdate = true;
   }, [geometry, space, palette, colorMode, highlightedIndices, neighborIndices, neighborCenter, biasScores]);
 
-  // Set raycaster threshold for point picking
-  useEffect(() => {
-    raycaster.params.Points = { threshold: 0.5 };
-  }, [raycaster]);
-
   // Reset pulse timer when a new pulse starts
   useEffect(() => {
     if (pulseIndex != null) pulseTime.current = 0;
@@ -211,57 +237,6 @@ export function PointCloud() {
     scaleAttr.needsUpdate = true;
   });
 
-  // Handle hover — re-raycast and sort by distanceToRay for accuracy
-  const handlePointerOver = (e: THREE.Intersection & { stopPropagation: () => void }) => {
-    if (!pointsRef.current) return;
-    e.stopPropagation();
-    // Re-raycast to get all hits, sort by aim accuracy
-    const hits = raycaster.intersectObject(pointsRef.current);
-    if (hits.length === 0) return;
-    hits.sort((a, b) => (a.distanceToRay ?? Infinity) - (b.distanceToRay ?? Infinity));
-    const idx = hits[0].index;
-    if (idx == null || !space) return;
-    const point = space.points[idx];
-    if (point) {
-      useSpaceStore.getState().hoverPoint(point, idx);
-      document.body.style.cursor = 'pointer';
-    }
-  };
-
-  const handlePointerOut = () => {
-    useSpaceStore.getState().hoverPoint(null, null);
-    document.body.style.cursor = 'auto';
-  };
-
-  // Handle click — re-raycast and sort by distanceToRay for accuracy
-  // Suppresses click if pointer moved more than DRAG_THRESHOLD_PX (drag discrimination)
-  const handleClick = (e: THREE.Intersection & { stopPropagation: () => void; nativeEvent?: PointerEvent }) => {
-    if (!pointsRef.current) return;
-    if (e.nativeEvent && wasDrag(e.nativeEvent)) return;
-    e.stopPropagation();
-    const hits = raycaster.intersectObject(pointsRef.current);
-    if (hits.length === 0) return;
-    hits.sort((a, b) => (a.distanceToRay ?? Infinity) - (b.distanceToRay ?? Infinity));
-    const idx = hits[0].index;
-    if (idx == null || !space) return;
-    const point = space.points[idx];
-    if (point) {
-      useSpaceStore.getState().selectPoint(point);
-    }
-  };
-
-  // Click on background deselects and clears neighborhood
-  // Suppresses if pointer moved (drag discrimination)
-  const handlePointerMissed = (e: MouseEvent) => {
-    if (wasDrag(e)) return;
-    const store = useSpaceStore.getState();
-    store.selectPoint(null);
-    if (store.neighborCenter != null) {
-      store.setNeighborhood(null, []);
-      store.setColorMode('cluster');
-    }
-  };
-
   // Merge fog uniforms with custom uniforms so Three.js can update them
   const uniforms = useMemo(
     () =>
@@ -288,10 +263,6 @@ export function PointCloud() {
       ref={pointsRef}
       geometry={geometry}
       frustumCulled={false}
-      onClick={handleClick}
-      onPointerOver={handlePointerOver}
-      onPointerOut={handlePointerOut}
-      onPointerMissed={handlePointerMissed}
     >
       <shaderMaterial
         vertexShader={vertexShader}

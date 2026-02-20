@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useSpaceStore } from '../store/useSpaceStore';
+import type { Neighbor } from '../services/embeddingService';
 
 export function InfoPanel() {
   const selectedPoint = useSpaceStore((s) => s.selectedPoint);
@@ -12,8 +13,10 @@ export function InfoPanel() {
   const setNeighborhood = useSpaceStore((s) => s.setNeighborhood);
   const setColorMode = useSpaceStore((s) => s.setColorMode);
   const neighborCenter = useSpaceStore((s) => s.neighborCenter);
+  const flyTo = useSpaceStore((s) => s.flyTo);
 
   const [loadingNeighbors, setLoadingNeighbors] = useState(false);
+  const [neighbors, setNeighbors] = useState<Neighbor[]>([]);
 
   const showNeighbors = useCallback(async () => {
     if (!embeddingService || !selectedPoint || !space) return;
@@ -23,8 +26,9 @@ export function InfoPanel() {
 
     setLoadingNeighbors(true);
     try {
-      const neighbors = await embeddingService.neighbors(String(pointIndex), 10);
-      setNeighborhood(pointIndex, neighbors.map((n) => n.index));
+      const result = await embeddingService.neighbors(String(pointIndex), 10);
+      setNeighbors(result);
+      setNeighborhood(pointIndex, result.map((n) => n.index));
       setColorMode('neighborhood');
     } catch (err) {
       console.error('Failed to load neighbors:', err);
@@ -35,12 +39,14 @@ export function InfoPanel() {
 
   const clearNeighbors = useCallback(() => {
     setNeighborhood(null, []);
+    setNeighbors([]);
     setColorMode('cluster');
   }, [setNeighborhood, setColorMode]);
 
   const handleClose = useCallback(() => {
     selectPoint(null);
     selectUserEmbed(null);
+    setNeighbors([]);
     if (neighborCenter != null) {
       clearNeighbors();
     }
@@ -102,6 +108,11 @@ export function InfoPanel() {
   const pointIndex = space.points.findIndex((p) => p.term === selectedPoint.term);
   const isShowingNeighbors = neighborCenter === pointIndex;
 
+  // For distance bars: scale relative to the max distance in the neighbor set
+  const maxDist = neighbors.length > 0
+    ? Math.max(...neighbors.map((n) => n.distance))
+    : 1;
+
   return (
     <div className="fixed right-4 top-4 z-40 w-72 rounded-lg bg-black/80 p-4 text-white backdrop-blur-sm">
       <div className="mb-3 flex items-start justify-between">
@@ -156,6 +167,49 @@ export function InfoPanel() {
               {loadingNeighbors ? 'Loading...' : 'Show Neighbors'}
             </button>
           )}
+        </div>
+      )}
+
+      {/* Neighbor list with distance bars */}
+      {isShowingNeighbors && neighbors.length > 0 && (
+        <div className="mb-3">
+          <div className="text-xs uppercase tracking-wider text-white/40 mb-2">
+            Neighbors ({neighbors.length})
+          </div>
+          <div className="space-y-1 max-h-60 overflow-y-auto pr-1">
+            {neighbors.map((n, i) => {
+              const barWidth = maxDist > 0 ? (1 - n.distance / maxDist) * 100 : 100;
+              return (
+                <button
+                  key={n.index}
+                  onClick={() => {
+                    const point = space.points[n.index];
+                    if (point) {
+                      selectPoint(point);
+                      flyTo(point.pos);
+                    }
+                  }}
+                  className="group relative flex w-full items-center gap-2 rounded px-2 py-1 text-left hover:bg-white/10"
+                >
+                  <span className="w-4 shrink-0 text-xs text-white/30 tabular-nums">{i + 1}</span>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-xs text-white/80 group-hover:text-white">
+                      {n.term}
+                    </div>
+                    <div className="mt-0.5 h-1 w-full rounded-full bg-white/5">
+                      <div
+                        className="h-full rounded-full bg-blue-400/60"
+                        style={{ width: `${barWidth}%` }}
+                      />
+                    </div>
+                  </div>
+                  <span className="shrink-0 text-xs tabular-nums text-white/30">
+                    {n.distance.toFixed(3)}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
 

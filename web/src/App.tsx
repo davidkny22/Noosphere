@@ -11,6 +11,8 @@ import { ControlModeToggle } from './components/ControlModeToggle';
 import { SpaceScaleToggle } from './components/SpaceScaleToggle';
 import { ModeToggle } from './components/ModeToggle';
 import { DistanceLegend } from './components/DistanceLegend';
+import { ShareButton } from './components/ShareButton';
+import { RectangleSelector } from './components/RectangleSelector';
 import { useSpaceStore } from './store/useSpaceStore';
 
 function App() {
@@ -32,10 +34,12 @@ function App() {
           <AnalogyPanel />
         </div>
       )}
+      <ShareButton />
       <SpaceScaleToggle />
       <ControlModeToggle />
       <ModeToggle />
       <DistanceLegend />
+      <RectangleSelector />
     </>
   );
 }
