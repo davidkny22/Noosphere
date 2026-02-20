@@ -12,7 +12,6 @@ import { BiasLines } from './BiasLines';
 import { ProjectedMarker } from './ProjectedMarker';
 import { UserEmbedPoints } from './UserEmbedPoints';
 import { IntroAnimation } from './IntroAnimation';
-import { ClusterFog } from './ClusterFog';
 import { ComparisonMarkers } from './ComparisonMarkers';
 import { AnalogyMarkers } from './AnalogyMarkers';
 import { Breadcrumbs } from './Breadcrumbs';
@@ -79,7 +78,6 @@ export function SpaceCanvas() {
         <directionalLight position={[-50, -30, -50]} intensity={0.2} />
         <CameraLight />
         <group scale={[spaceScale, spaceScale, spaceScale]}>
-          {/* <ClusterFog /> */}
           <PointCloud />
           <UserEmbedPoints />
           <NeighborLines />

@@ -27,14 +27,13 @@ export function CameraAnimator() {
   const flyToTarget = useSpaceStore((s) => s.flyToTarget);
   const flyToState = useSpaceStore((s) => s.flyToState);
   const space = useSpaceStore((s) => s.space);
-  const spaceScale = useSpaceStore((s) => s.spaceScale);
 
   // Enable auto-orbit when a new space loads
   useEffect(() => {
     if (!space || !controls) return;
     const orbitControls = controls as unknown as { autoRotate: boolean; autoRotateSpeed: number };
     autoOrbitRef.current = true;
-    orbitControls.autoRotate = true;
+    orbitControls.autoRotate = true; // eslint-disable-line react-hooks/immutability -- standard R3F OrbitControls mutation
     orbitControls.autoRotateSpeed = AUTO_ROTATE_SPEED;
   }, [space, controls]);
 
@@ -86,7 +85,7 @@ export function CameraAnimator() {
     if (autoOrbitRef.current && controls) {
       autoOrbitRef.current = false;
       const orbitControls = controls as unknown as { autoRotate: boolean };
-      orbitControls.autoRotate = false;
+      orbitControls.autoRotate = false; // eslint-disable-line react-hooks/immutability
     }
 
     // flyToTarget is in data-space; multiply by spaceScale for world-space

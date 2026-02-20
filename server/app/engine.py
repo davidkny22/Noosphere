@@ -6,6 +6,7 @@ import logging
 import os
 import sys
 import types
+from functools import lru_cache
 from pathlib import Path
 
 import faiss
@@ -61,6 +62,7 @@ class SpaceEngine:
         self.terms: list[str] = [p["term"] for p in space_data["points"]]
         self.positions_3d = np.array([p["pos"] for p in space_data["points"]], dtype=np.float32)
         self.num_points = len(self.terms)
+        self._term_index: dict[str, int] = {t.lower(): i for i, t in enumerate(self.terms)}
         logger.info("Loaded %d terms from %s", self.num_points, prefix)
 
         # Load FAISS index
@@ -93,6 +95,8 @@ class SpaceEngine:
         if param_path.exists():
             _patch_annoy()
             os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+            # weights_only=False required: ParamPaCMAP is saved as a full object (not state_dict).
+            # Only load .pt files you generated yourself via the pipeline.
             self.param_model = torch.load(param_path, weights_only=False)
             logger.info("ParamPaCMAP model loaded from %s", param_path)
         else:
@@ -101,11 +105,10 @@ class SpaceEngine:
 
     def _lookup(self, text: str) -> tuple[int, np.ndarray, tuple[float, float, float]] | None:
         """Look up a term in the space. Returns (index, hd_embedding, 3d_pos) or None."""
-        text_lower = text.strip().lower()
-        for i, term in enumerate(self.terms):
-            if term.lower() == text_lower:
-                return i, self.hd_embeddings[i], tuple(float(x) for x in self.positions_3d[i])
-        return None
+        i = self._term_index.get(text.strip().lower())
+        if i is None:
+            return None
+        return i, self.hd_embeddings[i], tuple(float(x) for x in self.positions_3d[i])
 
     def _encode(self, text: str) -> np.ndarray:
         """Encode text to HD embedding vector (L2-normalized)."""
@@ -157,21 +160,23 @@ class SpaceEngine:
 
     def compute_bias_scores(self, pole_a: str, pole_b: str) -> list[tuple[int, str, float]]:
         """Compute bias score for every term: cos(term, poleB) - cos(term, poleA), normalized to [-1, 1]."""
-        hit_a = self._lookup(pole_a)
-        hit_b = self._lookup(pole_b)
-        emb_a = hit_a[1] if hit_a else self._encode(pole_a)
-        emb_b = hit_b[1] if hit_b else self._encode(pole_b)
-
-        # Cosine similarity (embeddings are already L2-normalized in FAISS index)
-        cos_a = self.hd_embeddings @ emb_a  # (N,)
-        cos_b = self.hd_embeddings @ emb_b  # (N,)
-        raw_scores = cos_b - cos_a  # positive = closer to B
-
-        # Normalize to [-1, 1]
-        max_abs = max(np.abs(raw_scores).max(), 1e-10)
-        scores = raw_scores / max_abs
-
+        scores = self._bias_scores_cached(pole_a.strip().lower(), pole_b.strip().lower())
         return [(i, self.terms[i], float(scores[i])) for i in range(len(self.terms))]
+
+    @lru_cache(maxsize=32)
+    def _bias_scores_cached(self, pole_a_lower: str, pole_b_lower: str) -> np.ndarray:
+        """Cache bias score vectors for repeated pole pairs."""
+        hit_a = self._lookup(pole_a_lower)
+        hit_b = self._lookup(pole_b_lower)
+        emb_a = hit_a[1] if hit_a else self._encode(pole_a_lower)
+        emb_b = hit_b[1] if hit_b else self._encode(pole_b_lower)
+
+        cos_a = self.hd_embeddings @ emb_a
+        cos_b = self.hd_embeddings @ emb_b
+        raw_scores = cos_b - cos_a
+
+        max_abs = max(np.abs(raw_scores).max(), 1e-10)
+        return raw_scores / max_abs
 
     def analogy(self, a: str, b: str, c: str, k: int = 10) -> tuple[str, int, tuple[float, float, float], list[tuple[int, float]], int | None, int | None, int | None]:
         """a is to b as c is to ? → d = b - a + c, find nearest. Uses existing embeddings for known terms.

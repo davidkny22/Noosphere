@@ -9,8 +9,14 @@ import type {
 
 /**
  * In-browser embedding service using Transformers.js (MiniLM only).
- * Loads ~80MB model + pre-computed HD embeddings for cosine search.
- * 3D projection via weighted average of K nearest known positions.
+ *
+ * DISABLED: This service fabricates 3D positions via weighted-average of
+ * K-nearest known positions instead of using the trained ParamPaCMAP model.
+ * It will be re-enabled once Transformers.js + proper ONNX projection is
+ * implemented. The @huggingface/transformers dependency has been removed
+ * from package.json in the meantime.
+ *
+ * See serviceFactory.ts for the disable point.
  */
 export class LocalEmbeddingService implements EmbeddingService {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -44,7 +50,9 @@ export class LocalEmbeddingService implements EmbeddingService {
     this.hdEmbeddings = new Float32Array(buf);
 
     // Load MiniLM pipeline via Transformers.js
-    const { pipeline } = await import('@huggingface/transformers');
+    // Dependency removed — re-add @huggingface/transformers to package.json to enable
+    // @ts-expect-error — package not installed while local service is disabled
+    const { pipeline } = await import(/* @vite-ignore */ '@huggingface/transformers');
     this.extractor = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2', {
       dtype: 'fp32',
     });
@@ -194,6 +202,9 @@ export class LocalEmbeddingService implements EmbeddingService {
         index: n.index,
         distance: n.distance,
       })),
+      indexA: null,
+      indexB: null,
+      indexC: null,
     };
   }
 
@@ -210,6 +221,8 @@ export class LocalEmbeddingService implements EmbeddingService {
       similarity: dot,
       coordsA: this.project(vecA),
       coordsB: this.project(vecB),
+      indexA: null,
+      indexB: null,
     };
   }
 }

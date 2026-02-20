@@ -12,7 +12,6 @@ const DRAG_THRESHOLD_PX = 3;
 const POINT_SIZE_SCALE = 200;
 const POINT_SIZE_LOG_BASE = 8;
 const SCREEN_SCALE = 48.0;
-const LARGE_SPACE_THRESHOLD = 50000;
 
 const vertexShader = /* glsl */ `
 attribute vec3 color;
@@ -90,7 +89,6 @@ export function PointCloud() {
   const neighborIndices = useSpaceStore((s) => s.neighborIndices);
   const neighborCenter = useSpaceStore((s) => s.neighborCenter);
   const biasScores = useSpaceStore((s) => s.biasScores);
-  // const introState = useSpaceStore((s) => s.introState);
   const pulseIndex = useSpaceStore((s) => s.pulseIndex);
   const { raycaster, gl } = useThree();
   const pulseTime = useRef(0);
@@ -215,7 +213,6 @@ export function PointCloud() {
 
   // Handle hover — re-raycast and sort by distanceToRay for accuracy
   const handlePointerOver = (e: THREE.Intersection & { stopPropagation: () => void }) => {
-    // if (introState !== 'done' || !pointsRef.current) return;
     if (!pointsRef.current) return;
     e.stopPropagation();
     // Re-raycast to get all hits, sort by aim accuracy

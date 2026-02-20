@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
+import * as THREE from 'three';
 import { useSpaceStore } from '../store/useSpaceStore';
 
 const BAR_WIDTH_PX = 100;
@@ -15,7 +16,7 @@ export function DistanceLegendUpdater() {
 
   useFrame(() => {
     const camDist = camera.position.length();
-    const fovRad = ((camera as any).fov * Math.PI) / 180;
+    const fovRad = ((camera as THREE.PerspectiveCamera).fov * Math.PI) / 180;
     const viewportHeight = gl.domElement.clientHeight;
 
     const screenHeightWorld = 2 * camDist * Math.tan(fovRad / 2);

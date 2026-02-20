@@ -128,6 +128,7 @@ export function ComparisonMarkers() {
 
       {/* Dashed line connecting A and B — opacity pulses */}
       {lineGeometry && (
+        // @ts-expect-error — R3F <line> is THREE.Line, not SVGLineElement
         <line geometry={lineGeometry}>
           <lineDashedMaterial
             ref={lineMaterialRef}

@@ -80,9 +80,13 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Noosphere API", lifespan=lifespan)
 
+cors_origins = os.environ.get(
+    "CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173"
+).split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=[o.strip() for o in cors_origins],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -93,4 +97,5 @@ app.include_router(router)
 def run():
     import uvicorn
     port = int(os.environ.get("PORT", "8000"))
-    uvicorn.run("app.main:app", host="0.0.0.0", port=port, reload=True)
+    reload = os.environ.get("RELOAD", "false").lower() == "true"
+    uvicorn.run("app.main:app", host="0.0.0.0", port=port, reload=reload)

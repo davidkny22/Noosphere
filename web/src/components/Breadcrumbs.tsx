@@ -35,6 +35,7 @@ export function Breadcrumbs() {
     <group>
       {/* Dashed line connecting all waypoints */}
       {geometry && (
+        // @ts-expect-error — R3F <line> is THREE.Line, not SVGLineElement
         <line ref={lineRef} geometry={geometry}>
           <lineDashedMaterial
             color="#ffffff"

@@ -1,15 +1,14 @@
 import type { EmbeddingService } from './embeddingService';
 import { RemoteEmbeddingService } from './remoteEmbeddingService';
-// import { LocalEmbeddingService } from './localEmbeddingService';
 
 export type ServiceMode = 'auto' | 'remote' | 'local';
 
 export async function createEmbeddingService(
   mode: ServiceMode,
   spaceUrl: string,
-  terms: string[],
-  positions: [number, number, number][],
-  serverUrl = 'http://localhost:8000',
+  _terms: string[],
+  _positions: [number, number, number][],
+  serverUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000',
 ): Promise<{ service: EmbeddingService; mode: 'remote' | 'local' }> {
   if (mode === 'remote' || mode === 'auto') {
     try {
@@ -24,19 +23,12 @@ export async function createEmbeddingService(
         return { service: new RemoteEmbeddingService(serverUrl, prefix), mode: 'remote' };
       }
     } catch {
-      // if (mode === 'remote') {
-      //   throw new Error('Remote server unreachable');
-      // }
-      // auto mode: fall through to local
+      // Server unreachable — fall through to error below
     }
   }
 
-  // Local fallback disabled — LocalEmbeddingService fabricates 3D positions
-  // via weighted-average instead of using trained ParamPaCMAP. Will be
-  // rebuilt with Transformers.js + proper projection later.
-  // const local = new LocalEmbeddingService(spaceUrl);
-  // await local.init(terms, positions);
-  // return { service: local, mode: 'local' };
+  // Local fallback disabled — will be rebuilt with Transformers.js + proper ParamPaCMAP projection.
+  // See localEmbeddingService.ts for details.
   throw new Error(
     `Embedding server unreachable at ${serverUrl}. Start the server with: cd server && uv run serve`
   );

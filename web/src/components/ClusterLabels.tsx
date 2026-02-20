@@ -22,7 +22,7 @@ export function ClusterLabels() {
             outlineWidth={0.05}
             outlineColor="black"
             outlineOpacity={0.3}
-            fog
+            {...{ fog: true } as Record<string, unknown>}
           >
             {cluster.label}
           </Text>

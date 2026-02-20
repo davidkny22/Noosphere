@@ -9,7 +9,7 @@ const LOOK_SPEED = 0.003;
 export function FlyControls() {
   const controlMode = useSpaceStore((s) => s.controlMode);
   const { camera, gl } = useThree();
-  const keys = useRef({ w: false, s: false, a: false, d: false, q: false, e: false, shift: false, space: false, ctrl: false });
+  const keys = useRef<Record<string, boolean>>({ w: false, s: false, a: false, d: false, q: false, e: false, shift: false, space: false, ctrl: false });
   const mouse = useRef({ isDown: false, prevX: 0, prevY: 0 });
   const euler = useRef(new THREE.Euler(0, 0, 0, 'YXZ'));
 
@@ -25,7 +25,7 @@ export function FlyControls() {
       if (e.key === ' ') { e.preventDefault(); keys.current.space = true; return; }
       if (e.key === 'Control') { keys.current.ctrl = true; return; }
       const k = e.key.toLowerCase();
-      if (k in keys.current) (keys.current as any)[k] = true;
+      if (k in keys.current) keys.current[k] = true;
     };
     const onKeyUp = (e: KeyboardEvent) => {
       if (isTyping(e)) return;
@@ -33,7 +33,7 @@ export function FlyControls() {
       if (e.key === ' ') { keys.current.space = false; return; }
       if (e.key === 'Control') { keys.current.ctrl = false; return; }
       const k = e.key.toLowerCase();
-      if (k in keys.current) (keys.current as any)[k] = false;
+      if (k in keys.current) keys.current[k] = false;
     };
 
     const canvas = gl.domElement;

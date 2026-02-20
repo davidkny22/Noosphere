@@ -61,7 +61,7 @@ export function SearchBar() {
     }, 200);
 
     return () => clearTimeout(debounceRef.current);
-  }, [input, search, getHighlightIndices, setHighlightedIndices, setColorMode, setSearchQuery]);
+  }, [input, search, getHighlightIndices, setHighlightedIndices, setColorMode, setSearchQuery, embeddingService]);
 
   const selectResult = useCallback(
     async (result: SearchResult | TeleportItem) => {
