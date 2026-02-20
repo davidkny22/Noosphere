@@ -57,6 +57,11 @@ def embed(body: EmbedRequest, request: Request):
 @router.post("/neighbors", response_model=NeighborsResponse)
 def neighbors(body: NeighborsRequest, request: Request):
     engine = _get_engine(request, body.space)
+    if body.index >= engine.num_points:
+        raise HTTPException(
+            status_code=400,
+            detail=f"index {body.index} out of range (space has {engine.num_points} points)",
+        )
     results = engine.find_neighbors(body.index, k=body.k)
     return NeighborsResponse(
         neighbors=[

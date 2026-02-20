@@ -23,4 +23,4 @@ dependencies = [
 build-space = "build_space:main"
 
 [tool.uv.sources]
-parampacmap = { git = "https://github.com/hyhuang00/ParamRepulsor.git" }
+parampacmap = { git = "https://github.com/hyhuang00/ParamRepulsor.git", rev = "be8df72b1ac9041be3aae3d99f16f0d392b492dc" }

@@ -1,7 +1,19 @@
 """Pydantic request/response schemas matching the frontend EmbeddingService interface."""
 from __future__ import annotations
 
-from pydantic import BaseModel
+import re
+
+from pydantic import BaseModel, Field, field_validator
+
+
+# Space name pattern: lowercase alphanumeric + hyphens only
+_SPACE_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
+
+
+def _validate_space(v: str) -> str:
+    if not _SPACE_RE.match(v):
+        raise ValueError("space must be lowercase alphanumeric with hyphens (e.g. 'minilm-10k')")
+    return v
 
 
 # --- Shared types ---
@@ -25,8 +37,13 @@ class Coords3D(BaseModel):
 
 class EmbedRequest(BaseModel):
     space: str
-    text: str
-    k: int = 10
+    text: str = Field(max_length=10_000)
+    k: int = Field(default=10, ge=1, le=100)
+
+    @field_validator("space")
+    @classmethod
+    def check_space(cls, v: str) -> str:
+        return _validate_space(v)
 
 
 class EmbedResponse(BaseModel):
@@ -38,8 +55,13 @@ class EmbedResponse(BaseModel):
 
 class NeighborsRequest(BaseModel):
     space: str
-    index: int
-    k: int = 10
+    index: int = Field(ge=0)
+    k: int = Field(default=10, ge=1, le=100)
+
+    @field_validator("space")
+    @classmethod
+    def check_space(cls, v: str) -> str:
+        return _validate_space(v)
 
 
 class NeighborsResponse(BaseModel):
@@ -50,8 +72,13 @@ class NeighborsResponse(BaseModel):
 
 class BiasRequest(BaseModel):
     space: str
-    pole_a: str
-    pole_b: str
+    pole_a: str = Field(max_length=10_000)
+    pole_b: str = Field(max_length=10_000)
+
+    @field_validator("space")
+    @classmethod
+    def check_space(cls, v: str) -> str:
+        return _validate_space(v)
 
 
 class BiasScore(BaseModel):
@@ -68,10 +95,15 @@ class BiasResponse(BaseModel):
 
 class AnalogyRequest(BaseModel):
     space: str
-    a: str
-    b: str
-    c: str
-    k: int = 10
+    a: str = Field(max_length=10_000)
+    b: str = Field(max_length=10_000)
+    c: str = Field(max_length=10_000)
+    k: int = Field(default=10, ge=1, le=100)
+
+    @field_validator("space")
+    @classmethod
+    def check_space(cls, v: str) -> str:
+        return _validate_space(v)
 
 
 class AnalogyResponse(BaseModel):
@@ -87,8 +119,13 @@ class AnalogyResponse(BaseModel):
 
 class CompareRequest(BaseModel):
     space: str
-    text_a: str
-    text_b: str
+    text_a: str = Field(max_length=10_000)
+    text_b: str = Field(max_length=10_000)
+
+    @field_validator("space")
+    @classmethod
+    def check_space(cls, v: str) -> str:
+        return _validate_space(v)
 
 
 class CompareResponse(BaseModel):
