@@ -105,7 +105,7 @@ export function SpaceCanvas() {
   return (
     <div className="fixed inset-0">
       <Canvas
-        camera={{ position: [0, 0, 80], fov: 60, near: 0.1, far: 1500 }}
+        camera={{ position: [0, 0, 120], fov: 60, near: 0.1, far: 1500 }}
         gl={{ antialias: true }}
         style={{ background: FOG_COLOR }}
       >

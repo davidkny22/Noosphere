@@ -58,15 +58,22 @@ def filter_term(term: str) -> bool:
     return True
 
 
-def _load_source_terms(data_dir: Path, filename: str) -> list[str]:
-    """Load terms from a source file (one per line, preserving file order as rank)."""
+def _load_source_terms(data_dir: Path, filename: str, key: str = "") -> list[str]:
+    """Load terms from a source file (one per line, preserving file order as rank).
+
+    If the file doesn't exist and a source key is provided, attempts to
+    auto-download from a known public URL.
+    """
     filepath = data_dir / "sources" / filename
+    if not filepath.exists() and key:
+        from .download_sources import download_if_missing
+        download_if_missing(key, filepath)
     if not filepath.exists():
         logger.info("Source file %s not found — skipping", filename)
         return []
 
     terms = []
-    with open(filepath) as f:
+    with open(filepath, encoding="utf-8") as f:
         for line in f:
             raw = line.strip()
             # Skip comments (curated_concepts uses #)
@@ -118,7 +125,7 @@ def _assemble_configured(
     logger.info("Step 1: Loading all sources and tagging provenance...")
     source_terms: dict[str, list[str]] = {}  # key -> ordered terms
     for src in sources_cfg:
-        terms = _load_source_terms(data_dir, src["file"])
+        terms = _load_source_terms(data_dir, src["file"], key=src["key"])
         source_terms[src["key"]] = terms
 
     # Build term -> set of source keys (provenance count)
@@ -225,7 +232,7 @@ def _assemble_legacy(target_size: int, data_dir: Path) -> VocabularyResult:
     ]:
         if len(ordered) >= target_size:
             break
-        terms = _load_source_terms(data_dir, filename)
+        terms = _load_source_terms(data_dir, filename, key=key)
         added = 0
         for t in terms:
             if t not in seen:

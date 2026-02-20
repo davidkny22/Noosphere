@@ -28,31 +28,37 @@ export function CameraAnimator() {
   const flyToState = useSpaceStore((s) => s.flyToState);
   const space = useSpaceStore((s) => s.space);
 
-  // Enable auto-orbit when a new space loads
+  // Enable auto-orbit when a new space loads (temporarily enables orbit controls)
   useEffect(() => {
     if (!space || !controls) return;
-    const orbitControls = controls as unknown as { autoRotate: boolean; autoRotateSpeed: number };
+    const orbitControls = controls as unknown as { autoRotate: boolean; autoRotateSpeed: number; enabled: boolean };
     autoOrbitRef.current = true;
-    orbitControls.autoRotate = true; // eslint-disable-line react-hooks/immutability -- standard R3F OrbitControls mutation
+    orbitControls.enabled = true;
+    orbitControls.autoRotate = true;
     orbitControls.autoRotateSpeed = AUTO_ROTATE_SPEED;
   }, [space, controls]);
 
-  // Stop auto-orbit on first user interaction
+  // Stop auto-orbit on first user interaction (mouse, scroll, or keyboard)
   useEffect(() => {
     const canvas = gl.domElement;
 
     const stopAutoOrbit = () => {
       if (!autoOrbitRef.current || !controls) return;
       autoOrbitRef.current = false;
-      const orbitControls = controls as unknown as { autoRotate: boolean };
+      const orbitControls = controls as unknown as { autoRotate: boolean; enabled: boolean };
       orbitControls.autoRotate = false;
+      // Restore the user's chosen control mode (orbit controls may need to disable for fly)
+      const mode = useSpaceStore.getState().controlMode;
+      if (mode === 'fly') orbitControls.enabled = false;
     };
 
     canvas.addEventListener('pointerdown', stopAutoOrbit);
     canvas.addEventListener('wheel', stopAutoOrbit);
+    window.addEventListener('keydown', stopAutoOrbit);
     return () => {
       canvas.removeEventListener('pointerdown', stopAutoOrbit);
       canvas.removeEventListener('wheel', stopAutoOrbit);
+      window.removeEventListener('keydown', stopAutoOrbit);
     };
   }, [gl, controls]);
 

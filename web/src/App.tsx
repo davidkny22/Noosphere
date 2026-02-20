@@ -14,6 +14,7 @@ import { ModeToggle } from './components/ModeToggle';
 import { DistanceLegend } from './components/DistanceLegend';
 import { ShareButton } from './components/ShareButton';
 import { RectangleSelector } from './components/RectangleSelector';
+import { ControlsHint } from './components/ControlsHint';
 import { useSpaceStore } from './store/useSpaceStore';
 import type { SpaceEntry } from './store/useSpaceStore';
 
@@ -62,6 +63,7 @@ function App() {
       <ControlModeToggle />
       <ModeToggle />
       <DistanceLegend />
+      <ControlsHint />
       <RectangleSelector />
     </>
   );
