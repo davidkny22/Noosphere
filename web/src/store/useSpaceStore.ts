@@ -21,15 +21,22 @@ export interface UserEmbed {
 function loadUserEmbeds(spaceUrl: string): UserEmbed[] {
   if (typeof localStorage === 'undefined') return [];
   const raw = localStorage.getItem(`noosphere-user-embeds:${spaceUrl}`);
-  return raw ? JSON.parse(raw) : [];
+  try { return raw ? JSON.parse(raw) : []; } catch { return []; }
 }
 
 function saveUserEmbeds(spaceUrl: string, embeds: UserEmbed[]) {
   localStorage.setItem(`noosphere-user-embeds:${spaceUrl}`, JSON.stringify(embeds));
 }
 
+export interface SpaceEntry {
+  id: string;
+  label: string;
+  url: string;
+}
+
 interface SpaceState {
   // Data
+  availableSpaces: SpaceEntry[];
   spaceUrl: string;
   space: SpaceManifest | null;
   loading: boolean;
@@ -102,6 +109,7 @@ interface SpaceState {
   isAdvancedMode: boolean;
 
   // Actions
+  setAvailableSpaces: (spaces: SpaceEntry[]) => void;
   setSpaceUrl: (url: string) => void;
   setSpace: (space: SpaceManifest) => void;
   setLoading: (loading: boolean) => void;
@@ -135,28 +143,21 @@ interface SpaceState {
   toggleAdvancedMode: () => void;
 }
 
-const DEFAULT_SPACE_URL = '/spaces/minilm-10k.json.gz';
-
-/** Read space URL from bookmark hash if present, otherwise use default. */
-function getInitialSpaceUrl(): string {
+/** Read space URL from bookmark hash if present. */
+function getBookmarkSpaceUrl(): string | null {
   const hash = typeof window !== 'undefined' ? window.location.hash : '';
   if (hash.length > 1) {
     const params = new URLSearchParams(hash.slice(1));
     const sp = params.get('sp');
-    if (sp) return sp;
+    // Only accept relative /spaces/ paths (no absolute URLs or traversal)
+    if (sp && sp.startsWith('/spaces/') && !sp.includes('..')) return sp;
   }
-  return DEFAULT_SPACE_URL;
+  return null;
 }
 
-export const AVAILABLE_SPACES = [
-  { id: 'minilm-10k', label: 'MiniLM 10K (384d)', url: '/spaces/minilm-10k.json.gz' },
-  { id: 'minilm-150k', label: 'MiniLM 150K (384d)', url: '/spaces/minilm-150k.json.gz' },
-  { id: 'minilm-250k', label: 'MiniLM 250K (384d)', url: '/spaces/minilm-250k.json.gz' },
-  { id: 'qwen3-10k', label: 'Qwen3 10K (1024d)', url: '/spaces/qwen3-10k.json.gz' },
-];
-
 export const useSpaceStore = create<SpaceState>((set) => ({
-  spaceUrl: getInitialSpaceUrl(),
+  availableSpaces: [],
+  spaceUrl: getBookmarkSpaceUrl() ?? '',
   space: null,
   loading: true,
   error: null,
@@ -186,7 +187,7 @@ export const useSpaceStore = create<SpaceState>((set) => ({
 
   searchHistory: [],
 
-  userEmbeds: loadUserEmbeds(DEFAULT_SPACE_URL),
+  userEmbeds: [],
   selectedUserEmbed: null,
   hoveredUserEmbed: null,
 
@@ -205,6 +206,15 @@ export const useSpaceStore = create<SpaceState>((set) => ({
   isAdvancedMode: (typeof localStorage !== 'undefined' && localStorage.getItem('noosphere-advanced') === 'true') || false,
 
 
+  setAvailableSpaces: (spaces) => set((state) => {
+    // If no space is selected yet, auto-select the first available
+    const needsDefault = !state.spaceUrl && spaces.length > 0;
+    const url = needsDefault ? spaces[0].url : state.spaceUrl;
+    return {
+      availableSpaces: spaces,
+      ...(needsDefault ? { spaceUrl: url, userEmbeds: loadUserEmbeds(url) } : {}),
+    };
+  }),
   setSpaceUrl: (url) => set({
     spaceUrl: url,
     space: null,

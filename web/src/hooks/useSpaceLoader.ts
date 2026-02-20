@@ -53,6 +53,7 @@ export function useSpaceLoader(url: string) {
   const setServiceStatus = useSpaceStore((s) => s.setServiceStatus);
 
   useEffect(() => {
+    if (!url) return; // No space selected yet (waiting for index.json)
     let cancelled = false;
 
     setLoading(true);

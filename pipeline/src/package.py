@@ -119,6 +119,9 @@ def package_space(
     size_kb = filepath.stat().st_size / 1024
     logger.info("Wrote space to %s (%.0f KB)", filepath, size_kb)
 
+    # Update spaces/index.json so the frontend can discover available spaces
+    _update_space_index(output_dir, filename, embedding, len(points))
+
     # Save vocab mapping: term -> embedding index (for later filtering/FAISS rebuilds)
     vocab_path = output_dir / f"{embedding.model_name}-{num_k}k-vocab.json.gz"
     vocab_map = {term: i for i, term in enumerate(embedding.terms)}
@@ -127,3 +130,34 @@ def package_space(
     logger.info("Wrote vocab mapping to %s (%d terms)", vocab_path, len(vocab_map))
 
     return str(filepath)
+
+
+def _update_space_index(
+    output_dir: Path,
+    filename: str,
+    embedding: EmbeddingResult,
+    num_points: int,
+) -> None:
+    """Upsert this space into spaces/index.json for frontend discovery."""
+    index_path = output_dir / "index.json"
+
+    # Load existing index or start fresh
+    entries: list[dict] = []
+    if index_path.exists():
+        try:
+            entries = json.loads(index_path.read_text())
+        except (json.JSONDecodeError, ValueError):
+            entries = []
+
+    num_k = num_points // 1000
+    space_id = f"{embedding.model_name}-{num_k}k"
+    url = f"/spaces/{filename}"
+    label = f"{embedding.model_name.upper()} {num_k}K ({embedding.embedding_dim}d)"
+
+    # Upsert: replace existing entry with same id, or append
+    entries = [e for e in entries if e.get("id") != space_id]
+    entries.append({"id": space_id, "label": label, "url": url})
+    entries.sort(key=lambda e: e["id"])
+
+    index_path.write_text(json.dumps(entries, indent=2) + "\n")
+    logger.info("Updated space index: %s (%d spaces)", index_path, len(entries))

@@ -1,13 +1,14 @@
-import { useSpaceStore, AVAILABLE_SPACES } from '../store/useSpaceStore';
+import { useSpaceStore } from '../store/useSpaceStore';
 
 export function LoadingScreen() {
   const loading = useSpaceStore((s) => s.loading);
   const error = useSpaceStore((s) => s.error);
+  const availableSpaces = useSpaceStore((s) => s.availableSpaces);
   const spaceUrl = useSpaceStore((s) => s.spaceUrl);
 
   if (!loading && !error) return null;
 
-  const spaceName = AVAILABLE_SPACES.find((s) => s.url === spaceUrl)?.label ?? 'space';
+  const spaceName = availableSpaces.find((s) => s.url === spaceUrl)?.label ?? 'space';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0a0a0a]">
