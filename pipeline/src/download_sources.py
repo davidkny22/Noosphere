@@ -17,6 +17,7 @@ import json
 import logging
 import tempfile
 import urllib.request
+from collections.abc import Callable
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -285,7 +286,7 @@ def _extract_strings(obj: object, out: set[str]) -> None:
 # Registry
 # ---------------------------------------------------------------------------
 
-_DOWNLOADERS: dict[str, callable] = {
+_DOWNLOADERS: dict[str, Callable[[Path], None]] = {
     "conceptnet": _download_conceptnet,
     "wordnet": _download_wordnet,
     "mesh": _download_mesh,

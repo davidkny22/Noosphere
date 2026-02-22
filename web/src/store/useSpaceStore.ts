@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type { SpaceManifest, PointData, ColorMode } from '../types/space';
-import type { EmbeddingService, Neighbor } from '../services/embeddingService';
+import type { EmbeddingService, Neighbor, BiasStats } from '../services/embeddingService';
 
 export interface AnalogyResultData {
   a: string;
@@ -67,10 +67,17 @@ interface SpaceState {
   neighborIndices: number[];
   neighborCenter: number | null;
 
+  // Lookup maps (computed when space loads)
+  termToIndex: Map<string, number>;
+  clusterToIndices: Map<number, number[]>;
+
   // Bias
   biasScores: number[];
   biasLinesEnabled: boolean;
   biasPoles: { a: string; b: string } | null;
+  biasStats: BiasStats | null;
+  biasPoleSimilarity: number | null;
+  biasThreshold: number;
 
   // Search history breadcrumbs
   searchHistory: Array<{ query: string; pos: [number, number, number]; timestamp: number }>;
@@ -128,6 +135,9 @@ interface SpaceState {
   setBiasScores: (scores: number[]) => void;
   setBiasLinesEnabled: (enabled: boolean) => void;
   setBiasPoles: (poles: { a: string; b: string } | null) => void;
+  setBiasStats: (stats: BiasStats | null) => void;
+  setBiasPoleSimilarity: (sim: number | null) => void;
+  setBiasThreshold: (threshold: number) => void;
   addUserEmbed: (embed: UserEmbed) => void;
   removeUserEmbed: (id: string) => void;
   selectUserEmbed: (embed: UserEmbed | null) => void;
@@ -181,9 +191,15 @@ export const useSpaceStore = create<SpaceState>((set) => ({
   neighborIndices: [],
   neighborCenter: null,
 
+  termToIndex: new Map<string, number>(),
+  clusterToIndices: new Map<number, number[]>(),
+
   biasScores: [],
   biasLinesEnabled: false,
   biasPoles: null,
+  biasStats: null,
+  biasPoleSimilarity: null,
+  biasThreshold: 0.15,
 
   searchHistory: [],
 
@@ -234,7 +250,16 @@ export const useSpaceStore = create<SpaceState>((set) => ({
     hoveredUserEmbed: null,
     searchHistory: [],
   }),
-  setSpace: (space) => set({ space, loading: false, error: null, introState: 'animating' }),
+  setSpace: (space) => {
+    const termToIndex = new Map(space.points.map((p, i) => [p.term, i]));
+    const clusterToIndices = new Map<number, number[]>();
+    space.points.forEach((p, i) => {
+      const arr = clusterToIndices.get(p.cluster);
+      if (arr) arr.push(i);
+      else clusterToIndices.set(p.cluster, [i]);
+    });
+    return set({ space, loading: false, error: null, introState: 'animating', termToIndex, clusterToIndices });
+  },
   setLoading: (loading) => set({ loading }),
   setError: (error) => set({ error, loading: false }),
   selectPoint: (point) => set({ selectedPoint: point, selectedUserEmbed: null }),
@@ -251,6 +276,9 @@ export const useSpaceStore = create<SpaceState>((set) => ({
   setBiasScores: (scores) => set({ biasScores: scores }),
   setBiasLinesEnabled: (enabled) => set({ biasLinesEnabled: enabled }),
   setBiasPoles: (poles) => set({ biasPoles: poles }),
+  setBiasStats: (stats) => set({ biasStats: stats }),
+  setBiasPoleSimilarity: (sim) => set({ biasPoleSimilarity: sim }),
+  setBiasThreshold: (threshold) => set({ biasThreshold: threshold }),
   addUserEmbed: (embed) => set((s) => {
     const next = [...s.userEmbeds, embed];
     saveUserEmbeds(s.spaceUrl, next);
@@ -273,7 +301,7 @@ export const useSpaceStore = create<SpaceState>((set) => ({
     return { spaceScale: next };
   }),
   addSearchHistory: (entry) => set((s) => ({
-    searchHistory: [...s.searchHistory, entry],
+    searchHistory: [...s.searchHistory.slice(-49), entry],
   })),
   clearSearchHistory: () => set({ searchHistory: [] }),
   setIntroState: (state) => set({ introState: state }),

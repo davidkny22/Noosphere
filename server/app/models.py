@@ -24,15 +24,6 @@ class Neighbor(BaseModel):
     distance: float
 
 
-class Coords3D(BaseModel):
-    x: float
-    y: float
-    z: float
-
-    def to_tuple(self) -> tuple[float, float, float]:
-        return (self.x, self.y, self.z)
-
-
 # --- /embed ---
 
 class EmbedRequest(BaseModel):
@@ -87,8 +78,17 @@ class BiasScore(BaseModel):
     score: float
 
 
+class BiasStats(BaseModel):
+    mean: float
+    std: float
+    median: float
+    abs_mean: float
+
+
 class BiasResponse(BaseModel):
     scores: list[BiasScore]
+    pole_similarity: float
+    stats: BiasStats
 
 
 # --- /analogy ---

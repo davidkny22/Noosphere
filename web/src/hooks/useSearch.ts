@@ -1,6 +1,7 @@
 import { useMemo, useCallback } from 'react';
 import Fuse from 'fuse.js';
 import type { SpaceManifest, ClusterData } from '../types/space';
+import { useSpaceStore } from '../store/useSpaceStore';
 
 interface TermMatch {
   type: 'term';
@@ -68,12 +69,9 @@ export function useSearch(space: SpaceManifest | null) {
         if (result.type === 'term') {
           indices.add(result.index);
         } else {
-          // Add all points belonging to this cluster
-          for (let i = 0; i < space.points.length; i++) {
-            if (space.points[i]!.cluster === result.cluster.id) {
-              indices.add(i);
-            }
-          }
+          // Add all points belonging to this cluster (O(1) lookup)
+          const members = useSpaceStore.getState().clusterToIndices.get(result.cluster.id) ?? [];
+          for (const i of members) indices.add(i);
         }
       }
 

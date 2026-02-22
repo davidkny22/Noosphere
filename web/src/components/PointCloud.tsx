@@ -90,6 +90,7 @@ export function PointCloud() {
   const neighborIndices = useSpaceStore((s) => s.neighborIndices);
   const neighborCenter = useSpaceStore((s) => s.neighborCenter);
   const biasScores = useSpaceStore((s) => s.biasScores);
+  const biasThreshold = useSpaceStore((s) => s.biasThreshold);
   const pulseIndex = useSpaceStore((s) => s.pulseIndex);
   const { gl } = useThree();
   const pulseTime = useRef(0);
@@ -187,6 +188,7 @@ export function PointCloud() {
       neighborIndices,
       neighborCenter,
       biasScores: biasScores.length > 0 ? biasScores : undefined,
+      biasThreshold,
     });
 
     const colorAttr = geometry.getAttribute('color') as THREE.BufferAttribute;
@@ -205,7 +207,7 @@ export function PointCloud() {
       scales.fill(1.0);
     }
     scaleAttr.needsUpdate = true;
-  }, [geometry, space, palette, colorMode, highlightedIndices, neighborIndices, neighborCenter, biasScores]);
+  }, [geometry, space, palette, colorMode, highlightedIndices, neighborIndices, neighborCenter, biasScores, biasThreshold]);
 
   // Reset pulse timer when a new pulse starts
   useEffect(() => {

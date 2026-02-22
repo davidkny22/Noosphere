@@ -13,7 +13,7 @@ export interface ClusterData {
 }
 
 export interface SpaceManifest {
-  version: string;
+  version: number;
   model: string;
   model_full: string;
   embedding_dim: number;

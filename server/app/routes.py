@@ -10,6 +10,7 @@ from .models import (
     BiasRequest,
     BiasResponse,
     BiasScore,
+    BiasStats,
     CompareRequest,
     CompareResponse,
     EmbedRequest,
@@ -74,12 +75,14 @@ def neighbors(body: NeighborsRequest, request: Request):
 @router.post("/bias", response_model=BiasResponse)
 def bias(body: BiasRequest, request: Request):
     engine = _get_engine(request, body.space)
-    scores = engine.compute_bias_scores(body.pole_a, body.pole_b)
+    scores, pole_similarity, stats = engine.compute_bias_scores(body.pole_a, body.pole_b)
     return BiasResponse(
         scores=[
             BiasScore(term=term, index=idx, score=score)
             for idx, term, score in scores
         ],
+        pole_similarity=pole_similarity,
+        stats=BiasStats(**stats),
     )
 
 

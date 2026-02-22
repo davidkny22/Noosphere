@@ -122,6 +122,22 @@ export function CameraAnimator() {
       settleCount: 0,
     };
 
+    // Start pulsing the target point immediately so it's visible during flight
+    const store = useSpaceStore.getState();
+    if (store.space) {
+      const [tx, ty, tz] = flyToTarget;
+      let bestIdx = -1;
+      let bestDist = Infinity;
+      for (let i = 0; i < store.space.points.length; i++) {
+        const [px, py, pz] = store.space.points[i]!.pos;
+        const d = (px - tx) ** 2 + (py - ty) ** 2 + (pz - tz) ** 2;
+        if (d < bestDist) { bestDist = d; bestIdx = i; }
+      }
+      if (bestIdx >= 0 && bestDist < 4) {
+        store.setPulseIndex(bestIdx);
+      }
+    }
+
     interruptedRef.current = false;
   }, [flyToTarget, flyToState, camera, controls]);
 
@@ -182,7 +198,6 @@ export function CameraAnimator() {
           }
           if (bestIdx >= 0 && bestDist < 4) {
             store.selectPoint(store.space.points[bestIdx]!);
-            store.setPulseIndex(bestIdx);
           }
         }
       }

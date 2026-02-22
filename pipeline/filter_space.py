@@ -304,8 +304,7 @@ with open(sys.argv[4], "w") as f:
     size_mb = bin_path.stat().st_size / (1024 * 1024)
     logger.info("HD embeddings: %s (%.0f MB)", bin_path, size_mb)
 
-    import json as json_mod
-    meta_path.write_text(json_mod.dumps({
+    meta_path.write_text(json.dumps({
         "model": original_data["model"],
         "model_full": original_data.get("model_full", original_data["model"]),
         "num_points": len(filtered_points),

@@ -18,6 +18,19 @@ export interface BiasScore {
   score: number;
 }
 
+export interface BiasStats {
+  mean: number;
+  std: number;
+  median: number;
+  absMean: number;
+}
+
+export interface BiasProbeResult {
+  scores: BiasScore[];
+  poleSimilarity: number;
+  stats: BiasStats;
+}
+
 export interface AnalogyResult {
   result_term: string;
   coords_3d: [number, number, number];
@@ -38,7 +51,7 @@ export interface CompareResult {
 export interface EmbeddingService {
   embed(text: string): Promise<EmbedResult>;
   neighbors(pointId: string, k: number): Promise<Neighbor[]>;
-  biasProbe(poleA: string, poleB: string): Promise<BiasScore[]>;
+  biasProbe(poleA: string, poleB: string): Promise<BiasProbeResult>;
   analogy(a: string, b: string, c: string): Promise<AnalogyResult>;
   compare(textA: string, textB: string): Promise<CompareResult>;
 }

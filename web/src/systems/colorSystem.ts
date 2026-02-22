@@ -8,6 +8,7 @@ export interface ColorParams {
   neighborIndices?: number[];
   neighborCenter?: number | null;
   biasScores?: number[];
+  biasThreshold?: number;
 }
 
 const NOISE_COLOR: [number, number, number] = [0.55, 0.55, 0.55];
@@ -85,22 +86,21 @@ export function computeColors(
     }
   } else if (mode === 'bias_gradient') {
     const scores = params.biasScores;
+    const threshold = params.biasThreshold ?? 0.15;
     if (scores && scores.length === points.length) {
       for (let i = 0; i < points.length; i++) {
         const s = scores[i]; // [-1, 1]
         const mag = Math.abs(s);
 
         // Neutral points nearly disappear; strongly biased points glow
-        // mag < 0.15 → very dim (0.03)
-        // mag 0.15-1.0 → ramp up to full bright (bloom-triggering > 0.8)
-        if (mag < 0.15) {
+        if (mag < threshold) {
           // Nearly invisible
           colors[i * 3] = 0.03;
           colors[i * 3 + 1] = 0.03;
           colors[i * 3 + 2] = 0.03;
         } else {
-          // Intensity ramps from 0 at mag=0.15 to 1 at mag=1.0
-          const intensity = (mag - 0.15) / 0.85;
+          // Intensity ramps from 0 at threshold to 1 at mag=1.0
+          const intensity = (mag - threshold) / (1 - threshold);
           if (s < 0) {
             // Red pole — glow bright red
             colors[i * 3] = 0.15 + 0.95 * intensity;      // up to 1.1 (clamped by GPU)

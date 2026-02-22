@@ -3,6 +3,7 @@ import type {
   EmbedResult,
   Neighbor,
   BiasScore,
+  BiasProbeResult,
   AnalogyResult,
   CompareResult,
 } from './embeddingService';
@@ -143,7 +144,7 @@ export class LocalEmbeddingService implements EmbeddingService {
       }));
   }
 
-  async biasProbe(poleA: string, poleB: string): Promise<BiasScore[]> {
+  async biasProbe(poleA: string, poleB: string): Promise<BiasProbeResult> {
     const vecA = await this.encode(poleA);
     const vecB = await this.encode(poleB);
     const dim = this.embeddingDim;
@@ -165,15 +166,30 @@ export class LocalEmbeddingService implements EmbeddingService {
 
     if (maxAbs < 1e-10) maxAbs = 1;
 
+    let sum = 0, absSum = 0;
     for (let i = 0; i < this.numPoints; i++) {
-      scores.push({
-        term: this.terms[i],
-        index: i,
-        score: rawScores[i] / maxAbs,
-      });
+      const normalized = rawScores[i] / maxAbs;
+      scores.push({ term: this.terms[i], index: i, score: normalized });
+      sum += normalized;
+      absSum += Math.abs(normalized);
     }
 
-    return scores;
+    // Compute pole similarity (dot product of normalized vectors)
+    let poleSim = 0;
+    for (let d = 0; d < this.embeddingDim; d++) poleSim += vecA[d] * vecB[d];
+
+    const mean = sum / this.numPoints;
+    const sortedScores = [...rawScores].map(s => s / maxAbs).sort((a, b) => a - b);
+    const median = sortedScores[Math.floor(sortedScores.length / 2)];
+    let variance = 0;
+    for (let i = 0; i < this.numPoints; i++) variance += (scores[i].score - mean) ** 2;
+    const std = Math.sqrt(variance / this.numPoints);
+
+    return {
+      scores,
+      poleSimilarity: poleSim,
+      stats: { mean, std, median, absMean: absSum / this.numPoints },
+    };
   }
 
   async analogy(a: string, b: string, c: string): Promise<AnalogyResult> {

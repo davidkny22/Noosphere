@@ -79,8 +79,11 @@ test_vec = np.random.randn(1, embeddings.shape[1]).astype(np.float32)
 test_coords = model.transform(test_vec)
 print(f"transform test: {test_coords.shape}, coords {test_coords[0].tolist()}", file=sys.stderr)
 
-# Save model
+# Save model + checksum sidecar
+import hashlib
 torch.save(model, config["model_path"])
+sha = hashlib.sha256(open(config["model_path"], "rb").read()).hexdigest()
+open(config["model_path"] + ".sha256", "w").write(sha)
 np.save(config["coords_path"], coords_3d)
 
 model_size = os.path.getsize(config["model_path"]) / (1024 * 1024)

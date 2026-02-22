@@ -18,10 +18,12 @@ export function InfoPanel() {
   const [loadingNeighbors, setLoadingNeighbors] = useState(false);
   const [neighbors, setNeighbors] = useState<Neighbor[]>([]);
 
+  const termToIndex = useSpaceStore((s) => s.termToIndex);
+
   const showNeighbors = useCallback(async () => {
     if (!embeddingService || !selectedPoint || !space) return;
 
-    const pointIndex = space.points.findIndex((p) => p.term === selectedPoint.term);
+    const pointIndex = termToIndex.get(selectedPoint.term) ?? -1;
     if (pointIndex < 0) return;
 
     setLoadingNeighbors(true);
@@ -35,7 +37,7 @@ export function InfoPanel() {
     } finally {
       setLoadingNeighbors(false);
     }
-  }, [embeddingService, selectedPoint, space, setNeighborhood, setColorMode]);
+  }, [embeddingService, selectedPoint, space, termToIndex, setNeighborhood, setColorMode]);
 
   const clearNeighbors = useCallback(() => {
     setNeighborhood(null, []);
@@ -105,7 +107,7 @@ export function InfoPanel() {
   if (!selectedPoint) return null;
 
   const cluster = space.clusters.find((c) => c.id === selectedPoint.cluster);
-  const pointIndex = space.points.findIndex((p) => p.term === selectedPoint.term);
+  const pointIndex = termToIndex.get(selectedPoint.term) ?? -1;
   const isShowingNeighbors = neighborCenter === pointIndex;
 
   // For distance bars: scale relative to the max distance in the neighbor set

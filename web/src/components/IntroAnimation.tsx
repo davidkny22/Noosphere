@@ -2,14 +2,11 @@ import { useRef, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useSpaceStore } from '../store/useSpaceStore';
+import { easeOutCubic } from '../utils/math';
 
 const PULSE_DURATION = 0.8; // seconds for 2 pulses
 const EXPAND_DURATION = 2.0; // seconds for expansion
 const TOTAL_DURATION = PULSE_DURATION + EXPAND_DURATION;
-
-function easeOutCubic(t: number): number {
-  return 1 - Math.pow(1 - t, 3);
-}
 
 export function IntroAnimation() {
   const space = useSpaceStore((s) => s.space);
@@ -19,6 +16,7 @@ export function IntroAnimation() {
   const timeRef = useRef(0);
   const targetPositions = useRef<Float32Array | null>(null);
   const rafRef = useRef<number | null>(null);
+  const pointsObjRef = useRef<THREE.Points | null>(null);
 
   // Safety timeout: if animation doesn't complete within 4s, force 'done'
   useEffect(() => {
@@ -50,6 +48,7 @@ export function IntroAnimation() {
         return;
       }
 
+      pointsObjRef.current = pointsObj;
       const geo = (pointsObj as THREE.Points).geometry;
       const posAttr = geo.getAttribute('position') as THREE.BufferAttribute;
       const positions = posAttr.array as Float32Array;
@@ -80,14 +79,7 @@ export function IntroAnimation() {
     timeRef.current += delta;
     const t = timeRef.current;
 
-    // Find Points object
-    let pointsObj: THREE.Points | null = null;
-    scene.traverse((obj) => {
-      if (obj instanceof THREE.Points && !pointsObj) {
-        pointsObj = obj;
-      }
-    });
-
+    const pointsObj = pointsObjRef.current;
     if (!pointsObj) return;
 
     const geo = (pointsObj as THREE.Points).geometry;

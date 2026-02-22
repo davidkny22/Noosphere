@@ -23,8 +23,11 @@ function App() {
   const isAdvancedMode = useSpaceStore((s) => s.isAdvancedMode);
   useSpaceLoader(spaceUrl);
 
-  // Discover available spaces from index.json on startup
+  // Discover available spaces: try index.json first, fall back to server /health
   useEffect(() => {
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
+    // Try index.json (written by the pipeline)
     fetch('/spaces/index.json')
       .then((r) => {
         if (!r.ok) throw new Error(`${r.status}`);
@@ -34,13 +37,30 @@ function App() {
         if (Array.isArray(entries) && entries.length > 0) {
           useSpaceStore.getState().setAvailableSpaces(entries);
         } else {
-          useSpaceStore.getState().setError('No spaces found. Run the pipeline to generate a space.');
+          throw new Error('empty');
         }
       })
       .catch(() => {
-        useSpaceStore.getState().setError(
-          'Could not load spaces/index.json. Run the pipeline to generate a space.',
-        );
+        // Fallback: ask the API server which spaces it has loaded
+        fetch(`${apiUrl}/health`)
+          .then((r) => r.json())
+          .then((data: { spaces?: string[] }) => {
+            if (data.spaces && data.spaces.length > 0) {
+              const entries: SpaceEntry[] = data.spaces.map((id) => ({
+                id,
+                label: id.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+                url: `/spaces/${id}.json.gz`,
+              }));
+              useSpaceStore.getState().setAvailableSpaces(entries);
+            } else {
+              useSpaceStore.getState().setError('No spaces found. Run the pipeline to generate a space.');
+            }
+          })
+          .catch(() => {
+            useSpaceStore.getState().setError(
+              'No spaces found. Run the pipeline to generate a space, then start the server.',
+            );
+          });
       });
   }, []);
 

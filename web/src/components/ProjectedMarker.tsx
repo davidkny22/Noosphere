@@ -64,34 +64,6 @@ export function ProjectedMarker() {
     outerMat.opacity = (0.12 + 0.08 * wave) * fadeAlpha;
   });
 
-  // Don't render when a comparison is active — ComparisonMarkers handles that
-  if (!flyToTarget || comparisonResult) return null;
-
-  return (
-    <group ref={groupRef} position={flyToTarget} visible={false}>
-      {/* Inner bright core */}
-      <mesh ref={innerRef}>
-        <sphereGeometry args={[INNER_RADIUS, 16, 16]} />
-        <meshBasicMaterial
-          color={0x60a5fa}
-          transparent
-          opacity={0.8}
-          fog={false}
-          depthWrite={false}
-        />
-      </mesh>
-      {/* Outer glow halo */}
-      <mesh ref={outerRef}>
-        <sphereGeometry args={[OUTER_RADIUS, 16, 16]} />
-        <meshBasicMaterial
-          color={0x3b82f6}
-          transparent
-          opacity={0.15}
-          blending={THREE.AdditiveBlending}
-          fog={false}
-          depthWrite={false}
-        />
-      </mesh>
-    </group>
-  );
+  // Point pulse (scaleFactor in PointCloud) already marks the target — no extra marker needed.
+  return null;
 }

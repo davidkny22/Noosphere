@@ -2,7 +2,7 @@ import type {
   EmbeddingService,
   EmbedResult,
   Neighbor,
-  BiasScore,
+  BiasProbeResult,
   AnalogyResult,
   CompareResult,
 } from './embeddingService';
@@ -29,9 +29,18 @@ export class RemoteEmbeddingService implements EmbeddingService {
     return res.neighbors;
   }
 
-  async biasProbe(poleA: string, poleB: string): Promise<BiasScore[]> {
+  async biasProbe(poleA: string, poleB: string): Promise<BiasProbeResult> {
     const res = await this.post('/bias', { space: this.spacePrefix, pole_a: poleA, pole_b: poleB });
-    return res.scores;
+    return {
+      scores: res.scores,
+      poleSimilarity: res.pole_similarity,
+      stats: {
+        mean: res.stats.mean,
+        std: res.stats.std,
+        median: res.stats.median,
+        absMean: res.stats.abs_mean,
+      },
+    };
   }
 
   async analogy(a: string, b: string, c: string): Promise<AnalogyResult> {
