@@ -16,6 +16,7 @@ export function InfoPanel() {
   const flyTo = useSpaceStore((s) => s.flyTo);
 
   const [loadingNeighbors, setLoadingNeighbors] = useState(false);
+  const [neighborError, setNeighborError] = useState<string | null>(null);
   const [neighbors, setNeighbors] = useState<Neighbor[]>([]);
 
   const termToIndex = useSpaceStore((s) => s.termToIndex);
@@ -27,6 +28,7 @@ export function InfoPanel() {
     if (pointIndex < 0) return;
 
     setLoadingNeighbors(true);
+    setNeighborError(null);
     try {
       const result = await embeddingService.neighbors(String(pointIndex), 10);
       setNeighbors(result);
@@ -34,6 +36,7 @@ export function InfoPanel() {
       setColorMode('neighborhood');
     } catch (err) {
       console.error('Failed to load neighbors:', err);
+      setNeighborError(err instanceof Error ? err.message : 'Failed to load neighbors');
     } finally {
       setLoadingNeighbors(false);
     }
@@ -168,6 +171,9 @@ export function InfoPanel() {
             >
               {loadingNeighbors ? 'Loading...' : 'Show Neighbors'}
             </button>
+          )}
+          {neighborError && (
+            <div className="mt-1 text-xs text-red-300">{neighborError}</div>
           )}
         </div>
       )}

@@ -88,6 +88,12 @@ class SpaceEngine:
             )
             self.embedding_dim = meta["embedding_dim"]
             logger.info("HD embeddings: %d × %d", *self.hd_embeddings.shape)
+
+            # Ensure L2 normalization (dot products are used as cosine similarities)
+            norms = np.linalg.norm(self.hd_embeddings, axis=1, keepdims=True)
+            if not np.allclose(norms, 1.0, atol=1e-3):
+                logger.warning("HD embeddings not L2-normalized — normalizing at load time")
+                self.hd_embeddings /= np.maximum(norms, 1e-10)
         else:
             raise FileNotFoundError(f"HD embeddings not found for {prefix} in {space_dir}")
 
@@ -107,7 +113,10 @@ class SpaceEngine:
                     )
                 logger.info("ParamPaCMAP checksum verified for %s", prefix)
             else:
-                logger.warning("No checksum sidecar for %s — skipping verification", param_path)
+                raise FileNotFoundError(
+                    f"Missing checksum sidecar {checksum_path} — refusing to load "
+                    f"untrusted pickle file. Re-run the pipeline to regenerate."
+                )
             # weights_only=False required: ParamPaCMAP is saved as a full object (not state_dict).
             self.param_model = torch.load(param_path, weights_only=False)
             logger.info("ParamPaCMAP model loaded from %s", param_path)
@@ -126,6 +135,27 @@ class SpaceEngine:
         """Encode text to HD embedding vector (L2-normalized)."""
         vec = self.encoder.encode([text], normalize_embeddings=True)
         return vec[0].astype(np.float32)
+
+    def _resolve_pole(self, pole_text: str) -> np.ndarray:
+        """Resolve a pole string to an embedding vector.
+
+        For single words, uses _lookup (in-vocab) or _encode (OOV).
+        For multi-word strings (e.g. "he him his man"), averages the individual
+        word vectors — the correct approach for SemAxis pole construction.
+        """
+        words = pole_text.strip().lower().split()
+        if len(words) <= 1:
+            hit = self._lookup(pole_text)
+            return hit[1] if hit else self._encode(pole_text)
+        vecs = []
+        for w in words:
+            hit = self._lookup(w)
+            vecs.append(hit[1] if hit else self._encode(w))
+        avg = np.mean(vecs, axis=0).astype(np.float32)
+        norm = np.linalg.norm(avg)
+        if norm > 1e-10:
+            avg /= norm
+        return avg
 
     def _project(self, hd_vec: np.ndarray) -> tuple[float, float, float]:
         """Project HD vector to 3D via ParamPaCMAP or fallback weighted average."""
@@ -180,11 +210,9 @@ class SpaceEngine:
         key_a = pole_a.strip().lower()
         key_b = pole_b.strip().lower()
 
-        # Resolve embeddings for both poles
-        hit_a = self._lookup(key_a)
-        hit_b = self._lookup(key_b)
-        emb_a = hit_a[1] if hit_a else self._encode(pole_a)
-        emb_b = hit_b[1] if hit_b else self._encode(pole_b)
+        # Resolve pole embeddings (averages individual word vectors for multi-word poles)
+        emb_a = self._resolve_pole(pole_a)
+        emb_b = self._resolve_pole(pole_b)
 
         # Pole similarity (cosine, since embeddings are L2-normalized)
         pole_similarity = float(np.dot(emb_a, emb_b))
@@ -216,8 +244,12 @@ class SpaceEngine:
         cos_b = self.hd_embeddings @ emb_b
         raw_scores = cos_b - cos_a
 
-        max_abs = max(np.abs(raw_scores).max(), 1e-10)
-        result = raw_scores / max_abs
+        max_abs = float(np.abs(raw_scores).max())
+        if max_abs < 1e-4:
+            # Degenerate axis (poles too similar) — return zeros instead of amplified noise
+            result = np.zeros_like(raw_scores)
+        else:
+            result = raw_scores / max_abs
 
         # Evict oldest entry if cache is full
         if len(self._bias_cache) >= 32:
@@ -237,7 +269,13 @@ class SpaceEngine:
         emb_d = emb_b - emb_a + emb_c
         emb_d = emb_d / (np.linalg.norm(emb_d) + 1e-10)
 
-        neighbors = self.find_neighbors_by_vector(emb_d, k)
+        # Exclude input terms from results (standard analogy evaluation practice)
+        exclude = set()
+        if hit_a: exclude.add(hit_a[0])
+        if hit_b: exclude.add(hit_b[0])
+        if hit_c: exclude.add(hit_c[0])
+        raw_neighbors = self.find_neighbors_by_vector(emb_d, k + len(exclude))
+        neighbors = [(idx, dist) for idx, dist in raw_neighbors if idx not in exclude][:k]
         best_idx = neighbors[0][0]
         # Use the existing 3D position of the nearest term, not the projected synthetic vector
         coords = tuple(float(x) for x in self.positions_3d[best_idx])

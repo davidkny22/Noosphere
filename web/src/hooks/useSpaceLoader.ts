@@ -36,6 +36,14 @@ async function loadSpace(url: string): Promise<SpaceManifest> {
     throw new Error('Space file contains invalid JSON');
   }
 
+  // Version check — catch incompatible space files early
+  const EXPECTED_SPACE_VERSION = 2;
+  if (data.version !== undefined && data.version !== EXPECTED_SPACE_VERSION) {
+    throw new Error(
+      `Space was built with version ${data.version}, expected ${EXPECTED_SPACE_VERSION}. Please regenerate with the pipeline.`
+    );
+  }
+
   if (!data.points?.length) throw new Error('Space file has no points');
   if (!data.clusters?.length) throw new Error('Space file has no clusters');
   if (data.points.some(p => !Array.isArray(p.pos) || p.pos.length !== 3)) {

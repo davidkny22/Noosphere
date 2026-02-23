@@ -19,13 +19,15 @@ export interface UserEmbed {
 }
 
 function loadUserEmbeds(spaceUrl: string): UserEmbed[] {
-  if (typeof localStorage === 'undefined') return [];
-  const raw = localStorage.getItem(`noosphere-user-embeds:${spaceUrl}`);
-  try { return raw ? JSON.parse(raw) : []; } catch { return []; }
+  try {
+    if (typeof localStorage === 'undefined') return [];
+    const raw = localStorage.getItem(`noosphere-user-embeds:${spaceUrl}`);
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
 }
 
 function saveUserEmbeds(spaceUrl: string, embeds: UserEmbed[]) {
-  localStorage.setItem(`noosphere-user-embeds:${spaceUrl}`, JSON.stringify(embeds));
+  try { localStorage.setItem(`noosphere-user-embeds:${spaceUrl}`, JSON.stringify(embeds)); } catch {}
 }
 
 export interface SpaceEntry {
@@ -219,7 +221,7 @@ export const useSpaceStore = create<SpaceState>((set) => ({
   scaleBarDistance: 0,
   pulseIndex: null,
 
-  isAdvancedMode: (typeof localStorage !== 'undefined' && localStorage.getItem('noosphere-advanced') === 'true') || false,
+  isAdvancedMode: (() => { try { return typeof localStorage !== 'undefined' && localStorage.getItem('noosphere-advanced') === 'true'; } catch { return false; } })(),
 
 
   setAvailableSpaces: (spaces) => set((state) => {
@@ -307,7 +309,7 @@ export const useSpaceStore = create<SpaceState>((set) => ({
   setIntroState: (state) => set({ introState: state }),
   toggleAdvancedMode: () => set((s) => {
     const next = !s.isAdvancedMode;
-    localStorage.setItem('noosphere-advanced', String(next));
+    try { localStorage.setItem('noosphere-advanced', String(next)); } catch {}
     return { isAdvancedMode: next };
   }),
 }));

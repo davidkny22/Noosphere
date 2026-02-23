@@ -113,6 +113,11 @@ export function UserEmbedPoints() {
     return geo;
   }, [userEmbeds]);
 
+  // Dispose geometry when user embeds change to prevent WebGL memory leaks
+  useEffect(() => {
+    return () => { geometry?.dispose(); };
+  }, [geometry]);
+
   useEffect(() => {
     raycaster.params.Points = { threshold: 0.5 };
   }, [raycaster]);

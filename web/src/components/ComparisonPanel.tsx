@@ -10,11 +10,13 @@ export function ComparisonPanel() {
   const [textA, setTextA] = useState('');
   const [textB, setTextB] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const compare = useCallback(async () => {
     if (!embeddingService || !textA.trim() || !textB.trim()) return;
 
     setLoading(true);
+    setError(null);
     try {
       const result = await embeddingService.compare(textA.trim(), textB.trim());
       const store = useSpaceStore.getState();
@@ -63,6 +65,7 @@ export function ComparisonPanel() {
       ]);
     } catch (err) {
       console.error('Comparison failed:', err);
+      setError(err instanceof Error ? err.message : 'Comparison failed — is the server running?');
     } finally {
       setLoading(false);
     }
@@ -118,6 +121,10 @@ export function ComparisonPanel() {
           </button>
         )}
       </div>
+
+      {error && (
+        <div className="mt-2 rounded bg-red-500/20 px-2 py-1 text-xs text-red-300">{error}</div>
+      )}
 
       {comparisonResult && (
         <div className="mt-3 text-center text-sm">

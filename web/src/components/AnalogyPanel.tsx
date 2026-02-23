@@ -11,11 +11,13 @@ export function AnalogyPanel() {
   const [termB, setTermB] = useState('');
   const [termC, setTermC] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const compute = useCallback(async () => {
     if (!embeddingService || !termA.trim() || !termB.trim() || !termC.trim()) return;
 
     setLoading(true);
+    setError(null);
     try {
       const result = await embeddingService.analogy(termA.trim(), termB.trim(), termC.trim());
       const store = useSpaceStore.getState();
@@ -33,6 +35,7 @@ export function AnalogyPanel() {
       store.flyTo(result.coords_3d);
     } catch (err) {
       console.error('Analogy computation failed:', err);
+      setError(err instanceof Error ? err.message : 'Analogy failed — is the server running?');
     } finally {
       setLoading(false);
     }
@@ -105,6 +108,10 @@ export function AnalogyPanel() {
           </button>
         )}
       </div>
+
+      {error && (
+        <div className="mt-2 rounded bg-red-500/20 px-2 py-1 text-xs text-red-300">{error}</div>
+      )}
 
       {analogyResult && (
         <div className="mt-3 border-t border-white/10 pt-3">

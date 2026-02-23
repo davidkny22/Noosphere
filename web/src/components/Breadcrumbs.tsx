@@ -22,6 +22,10 @@ export function Breadcrumbs() {
     return geo;
   }, [searchHistory]);
 
+  useEffect(() => {
+    return () => { geometry?.dispose(); };
+  }, [geometry]);
+
   // Compute dash distances after geometry is assigned
   useEffect(() => {
     if (lineRef.current) {

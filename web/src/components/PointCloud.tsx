@@ -131,6 +131,11 @@ export function PointCloud() {
     return geo;
   }, [space]);
 
+  // Dispose geometry when space changes to prevent WebGL memory leaks
+  useEffect(() => {
+    return () => { geometry?.dispose(); };
+  }, [geometry]);
+
   // GPU picking — O(1) hover detection via offscreen color-ID render
   const pickedIndex = useGpuPicking(pointsRef, pointSize, SCREEN_SCALE);
 

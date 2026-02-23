@@ -6,13 +6,13 @@ import { useSpaceStore } from '../store/useSpaceStore';
 const PULSE_PERIOD = 1.5;
 const FADE_DELAY = 3.0;
 const FADE_DURATION = 1.5;
-const INNER_RADIUS = 0.6;
-const OUTER_RADIUS = 1.8;
+const _INNER_RADIUS = 0.6;
+const _OUTER_RADIUS = 1.8;
 
 export function ProjectedMarker() {
   const flyToTarget = useSpaceStore((s) => s.flyToTarget);
   const flyToState = useSpaceStore((s) => s.flyToState);
-  const comparisonResult = useSpaceStore((s) => s.comparisonResult);
+  void _INNER_RADIUS, _OUTER_RADIUS; // reserved for future marker rendering
   const groupRef = useRef<THREE.Group>(null);
   const innerRef = useRef<THREE.Mesh>(null);
   const outerRef = useRef<THREE.Mesh>(null);

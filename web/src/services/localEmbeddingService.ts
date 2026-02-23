@@ -71,6 +71,27 @@ export class LocalEmbeddingService implements EmbeddingService {
     return new Float32Array(output.data);
   }
 
+  /** Resolve a pole string: for multi-word inputs, average individual word vectors (SemAxis). */
+  private async resolvePole(poleText: string): Promise<Float32Array> {
+    const words = poleText.trim().toLowerCase().split(/\s+/);
+    if (words.length <= 1) return this.encode(poleText);
+
+    const vecs = await Promise.all(words.map((w) => this.encode(w)));
+    const dim = this.embeddingDim;
+    const avg = new Float32Array(dim);
+    for (const v of vecs) {
+      for (let d = 0; d < dim; d++) avg[d] += v[d];
+    }
+    let norm = 0;
+    for (let d = 0; d < dim; d++) {
+      avg[d] /= vecs.length;
+      norm += avg[d] * avg[d];
+    }
+    norm = Math.sqrt(norm) || 1;
+    for (let d = 0; d < dim; d++) avg[d] /= norm;
+    return avg;
+  }
+
   private cosineSearch(query: Float32Array, k: number): { index: number; distance: number }[] {
     const results: { index: number; distance: number }[] = [];
     const dim = this.embeddingDim;
@@ -145,8 +166,8 @@ export class LocalEmbeddingService implements EmbeddingService {
   }
 
   async biasProbe(poleA: string, poleB: string): Promise<BiasProbeResult> {
-    const vecA = await this.encode(poleA);
-    const vecB = await this.encode(poleB);
+    const vecA = await this.resolvePole(poleA);
+    const vecB = await this.resolvePole(poleB);
     const dim = this.embeddingDim;
     const scores: BiasScore[] = [];
     let maxAbs = 0;
@@ -164,11 +185,12 @@ export class LocalEmbeddingService implements EmbeddingService {
       maxAbs = Math.max(maxAbs, Math.abs(rawScores[i]));
     }
 
-    if (maxAbs < 1e-10) maxAbs = 1;
+    // Degenerate axis (poles too similar) — return zeros instead of amplified noise
+    const degenerate = maxAbs < 1e-4;
 
     let sum = 0, absSum = 0;
     for (let i = 0; i < this.numPoints; i++) {
-      const normalized = rawScores[i] / maxAbs;
+      const normalized = degenerate ? 0 : rawScores[i] / maxAbs;
       scores.push({ term: this.terms[i], index: i, score: normalized });
       sum += normalized;
       absSum += Math.abs(normalized);
@@ -207,7 +229,13 @@ export class LocalEmbeddingService implements EmbeddingService {
     norm = Math.sqrt(norm) || 1;
     for (let d = 0; d < dim; d++) vecD[d] /= norm;
 
-    const nearest = this.cosineSearch(vecD, 10);
+    // Exclude input terms from results (standard analogy evaluation practice)
+    const excludeTerms = new Set([a.toLowerCase(), b.toLowerCase(), c.toLowerCase()]);
+    const rawNearest = this.cosineSearch(vecD, 10 + excludeTerms.size);
+    const nearest = rawNearest
+      .filter((n) => !excludeTerms.has(this.terms[n.index].toLowerCase()))
+      .slice(0, 10);
+
     const coords_3d = this.project(vecD);
 
     return {

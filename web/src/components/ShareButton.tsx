@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { useSpaceStore } from '../store/useSpaceStore';
 import { buildShareUrl } from '../systems/bookmark';
 import type { BookmarkState } from '../systems/bookmark';
+import { getCameraState } from './DistanceLegend';
 
 export function ShareButton() {
   const [copied, setCopied] = useState(false);
@@ -9,25 +10,13 @@ export function ShareButton() {
   const handleShare = useCallback(async () => {
     const store = useSpaceStore.getState();
 
-    // Camera position/target aren't in Zustand — read from the Three.js canvas
-    // We access the R3F store via the canvas's __r3f internals
-    const canvas = document.querySelector('canvas');
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const r3fStore = (canvas as any)?.__r3f?.store?.getState();
-    const camera = r3fStore?.camera;
-    const controls = r3fStore?.controls;
-
-    if (!camera) return;
-
-    const target = controls?.target;
-    const cameraTarget: [number, number, number] = target
-      ? [target.x, target.y, target.z]
-      : [0, 0, 0];
+    // Camera state is synced every frame by DistanceLegendUpdater
+    const { pos, target } = getCameraState();
 
     const state: BookmarkState = {
       spaceUrl: store.spaceUrl,
-      cameraPos: [camera.position.x, camera.position.y, camera.position.z],
-      cameraTarget,
+      cameraPos: pos,
+      cameraTarget: target,
       spaceScale: store.spaceScale,
       colorMode: store.colorMode,
       controlMode: store.controlMode,

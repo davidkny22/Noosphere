@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import * as THREE from 'three';
 import { useSpaceStore } from '../store/useSpaceStore';
 
@@ -43,6 +43,10 @@ export function NeighborLines() {
     geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
     return geo;
   }, [space, neighborIndices, neighborCenter]);
+
+  useEffect(() => {
+    return () => { geometry?.dispose(); };
+  }, [geometry]);
 
   if (!geometry) return null;
 

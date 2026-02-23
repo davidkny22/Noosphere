@@ -33,6 +33,7 @@ export function BiasProbePanel() {
   const [poleA, setPoleA] = useState('');
   const [poleB, setPoleB] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [selectedPreset, setSelectedPreset] = useState(0);
   const [showTopTerms, setShowTopTerms] = useState(true);
 
@@ -40,6 +41,7 @@ export function BiasProbePanel() {
     if (!embeddingService || !poleA.trim() || !poleB.trim()) return;
 
     setLoading(true);
+    setError(null);
     try {
       const result = await embeddingService.biasProbe(poleA.trim(), poleB.trim());
       const scoreArray = result.scores
@@ -52,6 +54,7 @@ export function BiasProbePanel() {
       setColorMode('bias_gradient');
     } catch (err) {
       console.error('Bias probe failed:', err);
+      setError(err instanceof Error ? err.message : 'Bias probe failed — is the server running?');
     } finally {
       setLoading(false);
     }
@@ -195,6 +198,10 @@ export function BiasProbePanel() {
           </button>
         )}
       </div>
+
+      {error && (
+        <div className="mt-2 rounded bg-red-500/20 px-2 py-1 text-xs text-red-300">{error}</div>
+      )}
 
       {/* Pole similarity warning */}
       {isActive && showIdenticalWarning && (

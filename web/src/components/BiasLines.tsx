@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react';
+import { useMemo, useRef, useEffect } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { useSpaceStore } from '../store/useSpaceStore';
@@ -95,6 +95,10 @@ export function BiasLines() {
     geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
     return geo;
   }, [space, biasScores, biasLinesEnabled, biasPoles]);
+
+  useEffect(() => {
+    return () => { geometry?.dispose(); };
+  }, [geometry]);
 
   // Pulse animation
   useFrame((_, delta) => {
