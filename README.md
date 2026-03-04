@@ -192,12 +192,11 @@ Noosphere builds on these foundational works:
 
 | Component | Paper | Authors | Year |
 |-----------|-------|---------|------|
-| Sentence embeddings | [Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks](https://arxiv.org/abs/1908.10084) | Reimers & Gurevych | 2019 |
-| MiniLM model | [MiniLM: Deep Self-Attention Distillation for Task-Agnostic Compression of Pre-Trained Transformers](https://arxiv.org/abs/2002.10957) | Wang et al. | 2020 |
-| Dimensionality reduction | [Understanding How Dimension Reduction Tools Work: An Empirical Approach to Deciphering t-SNE, UMAP, TriMap, and PaCMAP for Data Visualization](https://arxiv.org/abs/2012.04456) | Wang et al. | 2021 |
-| Parametric projection | [Navigating the Effect of Parametrization for Dimensionality Reduction](https://arxiv.org/abs/2411.15894) | Huang et al. | 2024 |
-| Neighbor search | [The Faiss Library](https://arxiv.org/abs/2401.08281) | Douze et al. | 2024 |
-| Clustering | [Density-Based Clustering Based on Hierarchical Density Estimates](https://doi.org/10.1007/978-3-642-37456-2_14) | Campello et al. | 2013 |
+| Embedding model | [MiniLM: Deep Self-Attention Distillation for Task-Agnostic Compression of Pre-Trained Transformers](https://arxiv.org/abs/2002.10957) | Wang, Wei, Dong, Bao, Yang, Zhou | 2020 |
+| Dimensionality reduction | [Understanding How Dimension Reduction Tools Work: An Empirical Approach to Deciphering t-SNE, UMAP, TriMap, and PaCMAP for Data Visualization](https://arxiv.org/abs/2012.04456) | Wang, Huang, Rudin, Shaposhnik | 2021 |
+| Parametric projection | [Navigating the Effect of Parametrization for Dimensionality Reduction](https://arxiv.org/abs/2411.15894) | Huang, Wang, Rudin | 2024 |
+| Neighbor search | [The Faiss Library](https://arxiv.org/abs/2401.08281) | Douze, Guzhva, Deng, Johnson et al. | 2024 |
+| Clustering | [Density-Based Clustering Based on Hierarchical Density Estimates](https://doi.org/10.1007/978-3-642-37456-2_14) | Campello, Moulavi, Sander | 2013 |
 
 ## License
 
