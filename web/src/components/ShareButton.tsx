@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { useSpaceStore } from '../store/useSpaceStore';
 import { buildShareUrl } from '../systems/bookmark';
 import type { BookmarkState } from '../systems/bookmark';
-import { getCameraState } from './DistanceLegend';
+import { getCameraState } from '../utils/cameraState';
 
 export function ShareButton() {
   const [copied, setCopied] = useState(false);

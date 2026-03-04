@@ -63,8 +63,6 @@ The server is required for advanced features (embed, bias probe, analogy, compar
 ```bash
 cd web
 npm install
-npm run dev        # starts frontend only
-# or
 npm run dev        # starts both frontend + server via concurrently (default)
 npm run dev:web    # starts frontend only (if you're running the server separately)
 ```

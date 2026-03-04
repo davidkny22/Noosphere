@@ -28,14 +28,17 @@ export function CameraAnimator() {
   const flyToState = useSpaceStore((s) => s.flyToState);
   const space = useSpaceStore((s) => s.space);
 
-  // Enable auto-orbit when a new space loads (temporarily enables orbit controls)
+  // Enable auto-orbit when a new space loads (temporarily enables orbit controls).
+  // Mutations on OrbitControls properties are the standard Three.js API — not React state.
   useEffect(() => {
     if (!space || !controls) return;
     const orbitControls = controls as unknown as { autoRotate: boolean; autoRotateSpeed: number; enabled: boolean };
     autoOrbitRef.current = true;
+    /* eslint-disable react-hooks/immutability -- Three.js OrbitControls requires direct property mutation */
     orbitControls.enabled = true;
     orbitControls.autoRotate = true;
     orbitControls.autoRotateSpeed = AUTO_ROTATE_SPEED;
+    /* eslint-enable react-hooks/immutability */
   }, [space, controls]);
 
   // Stop auto-orbit on first user interaction (mouse, scroll, or keyboard)

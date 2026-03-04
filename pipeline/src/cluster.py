@@ -64,7 +64,7 @@ def cluster_points(
 
     # Build cluster metadata
     unique_labels = sorted(set(labels))
-    unique_labels = [l for l in unique_labels if l != -1]
+    unique_labels = [lbl for lbl in unique_labels if lbl != -1]
     noise_count = int(np.sum(labels == -1))
 
     clusters: list[ClusterInfo] = []

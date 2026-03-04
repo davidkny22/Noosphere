@@ -2,18 +2,9 @@ import { useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useSpaceStore } from '../store/useSpaceStore';
+import { setCameraPos, setCameraTarget } from '../utils/cameraState';
 
 const BAR_WIDTH_PX = 100;
-
-// Module-level camera state readable from outside the Canvas (e.g. ShareButton).
-// Updated every frame by DistanceLegendUpdater, avoids __r3f internal access.
-let _cameraPos: [number, number, number] = [0, 0, 0];
-let _cameraTarget: [number, number, number] = [0, 0, 0];
-
-/** Get current camera position/target from outside the Canvas. */
-export function getCameraState(): { pos: [number, number, number]; target: [number, number, number] } {
-  return { pos: _cameraPos, target: _cameraTarget };
-}
 
 /**
  * Runs inside the R3F Canvas — computes bar distance each frame
@@ -26,10 +17,10 @@ export function DistanceLegendUpdater() {
 
   useFrame((state) => {
     // Sync camera state for external readers (ShareButton, etc.)
-    _cameraPos = [camera.position.x, camera.position.y, camera.position.z];
+    setCameraPos([camera.position.x, camera.position.y, camera.position.z]);
     const controls = state.controls as { target?: THREE.Vector3 } | null;
     if (controls?.target) {
-      _cameraTarget = [controls.target.x, controls.target.y, controls.target.z];
+      setCameraTarget([controls.target.x, controls.target.y, controls.target.z]);
     }
 
     const camDist = camera.position.length();

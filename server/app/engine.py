@@ -174,10 +174,10 @@ class SpaceEngine:
         # Fallback: weighted average of K nearest known positions
         vec = hd_vec.reshape(1, -1).copy()
         faiss.normalize_L2(vec)
-        D, I = self.faiss_index.search(vec, 10)
-        weights = np.exp(D[0] * 5)  # softmax-ish on cosine similarities
+        dists, ids = self.faiss_index.search(vec, 10)
+        weights = np.exp(dists[0] * 5)  # softmax-ish on cosine similarities
         weights /= weights.sum()
-        pos = (weights[:, None] * self.positions_3d[I[0]]).sum(axis=0)
+        pos = (weights[:, None] * self.positions_3d[ids[0]]).sum(axis=0)
         return tuple(float(x) for x in pos)
 
     def embed_text(self, text: str, k: int = 10) -> tuple[tuple[float, float, float], list[tuple[int, float]]]:
@@ -196,17 +196,17 @@ class SpaceEngine:
         """Find K nearest neighbors for an existing point by index."""
         vec = self.hd_embeddings[index : index + 1].copy()
         faiss.normalize_L2(vec)
-        D, I = self.faiss_index.search(vec, k + 1)
+        dists, ids = self.faiss_index.search(vec, k + 1)
         # Exclude self
-        results = [(int(I[0, j]), float(D[0, j])) for j in range(k + 1) if I[0, j] != index]
+        results = [(int(ids[0, j]), float(dists[0, j])) for j in range(k + 1) if ids[0, j] != index]
         return results[:k]
 
     def find_neighbors_by_vector(self, hd_vec: np.ndarray, k: int = 10) -> list[tuple[int, float]]:
         """Find K nearest neighbors for an arbitrary HD vector."""
         vec = hd_vec.reshape(1, -1).copy()
         faiss.normalize_L2(vec)
-        D, I = self.faiss_index.search(vec, k)
-        return [(int(I[0, j]), float(D[0, j])) for j in range(k)]
+        dists, ids = self.faiss_index.search(vec, k)
+        return [(int(ids[0, j]), float(dists[0, j])) for j in range(k)]
 
     def compute_bias_scores(self, pole_a: str, pole_b: str) -> tuple[
         list[tuple[int, str, float]], float, dict[str, float]
@@ -279,9 +279,12 @@ class SpaceEngine:
 
         # Exclude input terms from results (standard analogy evaluation practice)
         exclude = set()
-        if hit_a: exclude.add(hit_a[0])
-        if hit_b: exclude.add(hit_b[0])
-        if hit_c: exclude.add(hit_c[0])
+        if hit_a:
+            exclude.add(hit_a[0])
+        if hit_b:
+            exclude.add(hit_b[0])
+        if hit_c:
+            exclude.add(hit_c[0])
         raw_neighbors = self.find_neighbors_by_vector(emb_d, k + len(exclude))
         neighbors = [(idx, dist) for idx, dist in raw_neighbors if idx not in exclude][:k]
         best_idx = neighbors[0][0]

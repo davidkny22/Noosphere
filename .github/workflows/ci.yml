@@ -25,7 +25,7 @@ jobs:
       - run: npx tsc --noEmit
 
   server:
-    name: Server (deps)
+    name: Server (lint + deps)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -33,13 +33,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+          cache-dependency-glob: server/uv.lock
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
       - run: uv sync
+      - run: uvx ruff check app/
 
   pipeline:
-    name: Pipeline (deps)
+    name: Pipeline (lint + deps)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -47,7 +51,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+          cache-dependency-glob: pipeline/uv.lock
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
       - run: uv sync
+      - run: uvx ruff check src/

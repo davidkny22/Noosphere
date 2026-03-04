@@ -36,12 +36,15 @@ export function ControlsHint() {
     return () => clearTimeout(t);
   }, [space]);
 
-  // Show again when control mode changes
+  // Show again when control mode changes.
+  // State updates are deferred to avoid synchronous cascading renders in the effect body.
   useEffect(() => {
     if (prevModeRef.current === controlMode) return;
     prevModeRef.current = controlMode;
-    setFading(false);
-    setVisible(true);
+    queueMicrotask(() => {
+      setFading(false);
+      setVisible(true);
+    });
     // Auto-dismiss after fresh show
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     timeoutRef.current = setTimeout(() => {
