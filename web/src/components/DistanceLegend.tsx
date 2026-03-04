@@ -78,7 +78,7 @@ export function DistanceLegend() {
 
   return (
     <div
-      className="fixed bottom-4 left-4 z-40 rounded-lg bg-black/60 px-3 py-2 backdrop-blur-sm ring-1 ring-white/10"
+      className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 rounded-lg bg-black/60 px-3 py-2 backdrop-blur-sm ring-1 ring-white/10"
       style={{ pointerEvents: 'none' }}
     >
       <div className="mb-1 text-center font-mono text-[10px] text-white/70">

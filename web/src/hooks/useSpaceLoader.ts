@@ -36,11 +36,11 @@ async function loadSpace(url: string): Promise<SpaceManifest> {
     throw new Error('Space file contains invalid JSON');
   }
 
-  // Version check — catch incompatible space files early
-  const EXPECTED_SPACE_VERSION = 2;
-  if (data.version !== undefined && data.version !== EXPECTED_SPACE_VERSION) {
+  // Version check — reject spaces from a future incompatible format
+  const MAX_SPACE_VERSION = 2;
+  if (data.version !== undefined && data.version > MAX_SPACE_VERSION) {
     throw new Error(
-      `Space was built with version ${data.version}, expected ${EXPECTED_SPACE_VERSION}. Please regenerate with the pipeline.`
+      `Space was built with version ${data.version}, but this client only supports up to version ${MAX_SPACE_VERSION}. Please update Noosphere.`
     );
   }
 

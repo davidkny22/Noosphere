@@ -28,7 +28,7 @@ class ClusterSchema(BaseModel):
 
 
 class SpaceManifest(BaseModel):
-    version: int = 1
+    version: int = 2
     model: str
     model_full: str
     embedding_dim: int

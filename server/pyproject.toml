@@ -17,5 +17,11 @@ dependencies = [
 [project.scripts]
 serve = "app.main:run"
 
+[[tool.uv.index]]
+name = "pytorch-cu124"
+url = "https://download.pytorch.org/whl/cu124"
+explicit = true
+
 [tool.uv.sources]
 parampacmap = { git = "https://github.com/hyhuang00/ParamRepulsor.git", rev = "be8df72b1ac9041be3aae3d99f16f0d392b492dc" }
+torch = { index = "pytorch-cu124" }

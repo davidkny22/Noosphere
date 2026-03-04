@@ -18,7 +18,13 @@ logger = logging.getLogger(__name__)
 
 
 def _patch_annoy():
-    """Mock annoy before importing parampacmap (segfaults on macOS ARM64)."""
+    """Mock annoy before importing parampacmap.
+
+    annoy's AnnoyIndex segfaults on macOS ARM64 (Apple Silicon) due to a
+    SIMD alignment bug in the native extension. parampacmap imports annoy
+    at module level, so we inject a no-op mock before the import happens.
+    Safe to remove once annoy ships an ARM64-compatible wheel.
+    """
     if "annoy" not in sys.modules:
         mock = types.ModuleType("annoy")
         mock.AnnoyIndex = type("AnnoyIndex", (), {"__init__": lambda self, *a, **kw: None})
@@ -101,6 +107,8 @@ class SpaceEngine:
         param_path = space_dir / f"{prefix}.parampacmap.pt"
         if param_path.exists():
             _patch_annoy()
+            # Intel MKL and PyTorch both ship OpenMP — loading both triggers a
+            # duplicate-lib abort on some platforms. This env var suppresses it.
             os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
             # Verify checksum if sidecar exists (guards against tampered pickle files)
             checksum_path = param_path.with_suffix(".pt.sha256")
@@ -118,7 +126,7 @@ class SpaceEngine:
                     f"untrusted pickle file. Re-run the pipeline to regenerate."
                 )
             # weights_only=False required: ParamPaCMAP is saved as a full object (not state_dict).
-            self.param_model = torch.load(param_path, weights_only=False)
+            self.param_model = torch.load(param_path, weights_only=False, map_location="cpu")
             logger.info("ParamPaCMAP model loaded from %s", param_path)
         else:
             self.param_model = None

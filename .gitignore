@@ -25,8 +25,22 @@ web/public/spaces/*.json
 web/public/spaces/*.json.gz
 web/public/spaces/*.faiss
 web/public/spaces/*.pt
+web/public/spaces/*.sha256
 web/public/spaces/*.bin
 web/public/spaces/*-embeddings.json
+
+# Ship the minilm-10k space pre-built (so cloners get a working space)
+!web/public/spaces/index.json
+!web/public/spaces/minilm-10k.json.gz
+!web/public/spaces/minilm-10k.faiss
+!web/public/spaces/minilm-10k.parampacmap.pt
+!web/public/spaces/minilm-10k.parampacmap.pt.sha256
+!web/public/spaces/minilm-10k-embeddings.bin
+!web/public/spaces/minilm-10k-embeddings.json
+!web/public/spaces/minilm-10k-vocab.json.gz
+
+# Internal planning docs (not for public distribution)
+docs/plans/
 
 # OS
 .DS_Store

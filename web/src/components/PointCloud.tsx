@@ -7,9 +7,9 @@ import { useGpuPicking, buildPickingColors } from '../hooks/useGpuPicking';
 
 const DRAG_THRESHOLD_PX = 3;
 
-// Inverse-log point sizing (TF projector formula)
+// Inverse-log point sizing (TF projector-inspired formula)
 // pointSize is a diameter in world-ish units; vertex shader converts to screen pixels
-// via (pointSize * SCREEN_SCALE / distance). SCREEN_SCALE=300 matches TF projector.
+// via (pointSize * SCREEN_SCALE / distance).
 const POINT_SIZE_SCALE = 200;
 const POINT_SIZE_LOG_BASE = 8;
 const SCREEN_SCALE = 48.0;

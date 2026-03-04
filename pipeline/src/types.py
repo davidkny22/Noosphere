@@ -39,7 +39,7 @@ class ClusterInfo:
     """Metadata for a single cluster."""
 
     id: int
-    label: str  # medoid term
+    label: str  # LLM-generated label, falls back to medoid term
     representative_terms: list[str]  # top-5 closest to centroid
     size: int
     centroid_3d: list[float]  # [x, y, z]

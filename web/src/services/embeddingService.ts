@@ -1,6 +1,3 @@
-// Phase 0: interface definition only. No implementations yet.
-// Phase 1 adds RemoteEmbeddingService and LocalEmbeddingService.
-
 export interface EmbedResult {
   coords_3d: [number, number, number];
   neighbors: Neighbor[];

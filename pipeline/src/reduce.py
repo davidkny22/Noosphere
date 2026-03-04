@@ -61,7 +61,20 @@ def _generate_pair_sklearn(X, n_neighbors, n_MN, n_FP, distance="euclidean", ver
 pacmap_internal.generate_pair = _generate_pair_sklearn
 
 # --- Continuous PaCMAP: smooth Phase 2→3 transition via cosine annealing ---
-# Only the Phase 2→3 boundary is smoothed. Phase 1→2 stays hard (smoothing it is harmful).
+#
+# Standard PaCMAP uses hard phase boundaries where loss weights change
+# abruptly between optimization phases. The Phase 2→3 jump can cause
+# points to "snap" into new positions, creating visual artifacts in 3D.
+# We replace the Phase 2→3 boundary with a raised-cosine crossfade so
+# weights blend smoothly over a window of iterations.
+#
+# Phase 1→2 stays hard because smoothing it degrades local neighborhood
+# quality (Phase 1's strong neighbor-attraction is needed to form clusters
+# before Phase 2 can refine mid-range structure).
+#
+# Phase windows and weight targets below reproduce PaCMAP's default
+# three-phase weight schedule (w_nb, w_mn, w_fp) but with the Phase 2→3
+# transition smoothed over overlapping cosine bells.
 import math
 
 def _cosine_weight(t, start, end):

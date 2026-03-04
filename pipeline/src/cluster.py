@@ -42,7 +42,6 @@ def cluster_points(
         "min_cluster_size": min_cluster_size,
         "min_samples": min_samples,
         "metric": "euclidean",
-        "pca_dims": 50,
     }
 
     # Cluster on 3D positions rather than HD embeddings. Rationale:

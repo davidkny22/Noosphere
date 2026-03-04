@@ -1,0 +1,9 @@
+{
+  "model": "minilm",
+  "model_full": "sentence-transformers/all-MiniLM-L6-v2",
+  "num_points": 10000,
+  "embedding_dim": 384,
+  "dtype": "float32",
+  "byte_order": "little",
+  "file": "minilm-10k-embeddings.bin"
+}

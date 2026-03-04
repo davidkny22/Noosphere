@@ -1,0 +1,17 @@
+{
+  "name": "noosphere",
+  "version": "1.0.0",
+  "private": true,
+  "description": "3D interactive visualization of AI embedding spaces",
+  "scripts": {
+    "setup": "cd server && uv sync && cd ../web && npm install",
+    "start": "cd web && npm run dev",
+    "dev": "cd web && npm run dev",
+    "build": "cd web && npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/davidkny22/Noosphere.git"
+  },
+  "license": "AGPL-3.0"
+}
