@@ -1,5 +1,7 @@
 FROM python:3.11-slim
 
+RUN apt-get update && apt-get install -y --no-install-recommends git && rm -rf /var/lib/apt/lists/*
+
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
 WORKDIR /app
@@ -18,4 +20,4 @@ ENV NOOSPHERE_SPACE_DIR=/app/spaces
 ENV HOST=0.0.0.0
 
 # Railway provides PORT dynamically
-CMD ["uv", "run", "serve"]
+CMD ["uv", "run", "python", "-c", "from app.main import run; run()"]
