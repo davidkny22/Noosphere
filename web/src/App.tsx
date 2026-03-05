@@ -28,14 +28,19 @@ function App() {
     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
     // Try index.json (written by the pipeline)
-    fetch('/spaces/index.json')
+    fetch(`${import.meta.env.BASE_URL}spaces/index.json`)
       .then((r) => {
         if (!r.ok) throw new Error(`${r.status}`);
         return r.json();
       })
       .then((entries: SpaceEntry[]) => {
         if (Array.isArray(entries) && entries.length > 0) {
-          useSpaceStore.getState().setAvailableSpaces(entries);
+          const base = import.meta.env.BASE_URL;
+          const resolved = entries.map((e) => ({
+            ...e,
+            url: e.url.startsWith('/') ? e.url : `${base}${e.url}`,
+          }));
+          useSpaceStore.getState().setAvailableSpaces(resolved);
         } else {
           throw new Error('empty');
         }
@@ -49,7 +54,7 @@ function App() {
               const entries: SpaceEntry[] = data.spaces.map((id) => ({
                 id,
                 label: id.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
-                url: `/spaces/${id}.json.gz`,
+                url: `${import.meta.env.BASE_URL}spaces/${id}.json.gz`,
               }));
               useSpaceStore.getState().setAvailableSpaces(entries);
             } else {

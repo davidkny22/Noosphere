@@ -2,6 +2,6 @@
   {
     "id": "minilm-10k",
     "label": "MiniLM 10k",
-    "url": "/spaces/minilm-10k.json.gz"
+    "url": "spaces/minilm-10k.json.gz"
   }
 ]
