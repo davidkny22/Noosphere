@@ -1,0 +1,10 @@
+web/node_modules
+web/dist
+pipeline/
+docs/
+.git
+.github
+__pycache__
+*.pyc
+.env
+.env.local
